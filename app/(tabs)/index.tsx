@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import {
   View,
   Text,
@@ -7,6 +13,7 @@ import {
   Animated,
   RefreshControl,
   Dimensions,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -14,6 +21,8 @@ import { router } from "expo-router";
 
 const API_BASE = "http://YOUR_BACKEND_IP:5000";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const CARD_GAP = 12;
+const CARD_WIDTH = (SCREEN_WIDTH - 40 - CARD_GAP) / 2;
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -25,7 +34,9 @@ interface Podcast {
   created_at: string;
 }
 
-// ─── Mock Data (remove when backend is connected) ───────────────────
+type FilterTab = "all" | "recent" | "oldest";
+
+// ─── Mock Data ───────────────────────────────────────────────────────
 
 const MOCK_PODCASTS: Podcast[] = [
   {
@@ -61,11 +72,22 @@ const MOCK_PODCASTS: Podcast[] = [
     original_filename: "World History - The French Revolution.pdf",
     status: "done",
     audio_url: "audio/5.mp3",
-    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    created_at: new Date(
+      Date.now() - 3 * 24 * 60 * 60 * 1000
+    ).toISOString(),
+  },
+  {
+    id: "6",
+    original_filename: "Mathematics - Calculus Integration Techniques.pdf",
+    status: "done",
+    audio_url: "audio/6.mp3",
+    created_at: new Date(
+      Date.now() - 5 * 24 * 60 * 60 * 1000
+    ).toISOString(),
   },
 ];
 
-// ─── Helpers ────────────────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────
 
 function timeAgo(dateString: string): string {
   const seconds = Math.floor(
@@ -75,135 +97,221 @@ function timeAgo(dateString: string): string {
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
   if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
   if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
-  return new Date(dateString).toLocaleDateString();
+  return new Date(dateString).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+  });
 }
 
 function cleanFilename(filename: string): string {
   return filename.replace(/\.pdf$/i, "");
 }
 
-function getGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour >= 5 && hour < 12) return "Good morning";
-  if (hour >= 12 && hour < 17) return "Good afternoon";
-  if (hour >= 17 && hour < 21) return "Good evening";
-  return "Burning the midnight oil?";
+// A short label (1-2 words) derived from the filename for the artwork tile
+function getShortLabel(filename: string): string {
+  const clean = cleanFilename(filename);
+  const words = clean.split(/[\s\-_]+/).filter(Boolean);
+  // Skip leading noise words
+  const noise = new Set(["chapter", "the", "a", "an", "of", "and", "&"]);
+  const meaningful = words.filter((w) => !noise.has(w.toLowerCase()));
+  return meaningful.slice(0, 2).join(" ").toUpperCase() || clean.slice(0, 6).toUpperCase();
 }
 
-// ─── Skeleton Card ──────────────────────────────────────────────────
+// ─── Skeleton ────────────────────────────────────────────────────────
 
-function SkeletonCard() {
-  const opacity = useRef(new Animated.Value(0.3)).current;
+function SkeletonCard({ wide }: { wide?: boolean }) {
+  const opacity = useRef(new Animated.Value(0.4)).current;
 
   useEffect(() => {
-    const animation = Animated.loop(
+    const anim = Animated.loop(
       Animated.sequence([
         Animated.timing(opacity, {
-          toValue: 0.6,
-          duration: 900,
+          toValue: 0.8,
+          duration: 800,
           useNativeDriver: true,
         }),
         Animated.timing(opacity, {
-          toValue: 0.3,
-          duration: 900,
+          toValue: 0.4,
+          duration: 800,
           useNativeDriver: true,
         }),
       ])
     );
-    animation.start();
-    return () => animation.stop();
+    anim.start();
+    return () => anim.stop();
   }, [opacity]);
+
+  if (wide) {
+    return (
+      <Animated.View
+        style={{ opacity, marginBottom: 12 }}
+        className="rounded-2xl overflow-hidden"
+      >
+        <View
+          style={{ height: 160, backgroundColor: "#e8e8e8" }}
+          className="w-full"
+        />
+        <View className="p-4 border border-paper-mid rounded-b-2xl">
+          <View
+            style={{ height: 12, width: "60%", backgroundColor: "#e8e8e8" }}
+            className="rounded mb-2"
+          />
+          <View
+            style={{ height: 10, width: "40%", backgroundColor: "#e8e8e8" }}
+            className="rounded"
+          />
+        </View>
+      </Animated.View>
+    );
+  }
 
   return (
     <Animated.View
-      style={{ opacity }}
-      className="flex-row items-center rounded-2xl bg-poddy-card p-4 mb-3"
+      style={{ opacity, width: CARD_WIDTH, marginBottom: 12 }}
+      className="rounded-2xl overflow-hidden border border-paper-mid"
     >
-      <View className="w-12 h-12 rounded-xl bg-poddy-card-hover" />
-      <View className="flex-1 ml-3">
-        <View className="h-4 w-3/4 rounded bg-poddy-card-hover mb-2" />
-        <View className="h-3 w-1/2 rounded bg-poddy-card-hover" />
+      <View style={{ height: 100, backgroundColor: "#e8e8e8" }} />
+      <View style={{ backgroundColor: "#f5f5f5" }} className="p-3">
+        <View
+          style={{ height: 10, width: "80%", backgroundColor: "#e8e8e8" }}
+          className="rounded mb-2"
+        />
+        <View
+          style={{ height: 8, width: "50%", backgroundColor: "#e8e8e8" }}
+          className="rounded"
+        />
       </View>
-      <View className="w-10 h-10 rounded-full bg-poddy-card-hover" />
     </Animated.View>
   );
 }
 
-// ─── Recent Card (Horizontal Compact) ───────────────────────────────
+// ─── Grid Card (small, 2-column) ─────────────────────────────────────
 
-function RecentCard({
-  item,
-  onPress,
-}: {
-  item: Podcast;
-  onPress: () => void;
-}) {
+function GridCard({ item, onPress }: { item: Podcast; onPress: () => void }) {
   const scale = useRef(new Animated.Value(1)).current;
 
-  const handlePressIn = () => {
+  const pressIn = () =>
     Animated.spring(scale, {
       toValue: 0.96,
       useNativeDriver: true,
     }).start();
-  };
 
-  const handlePressOut = () => {
-    Animated.spring(scale, {
-      toValue: 1,
-      friction: 4,
-      useNativeDriver: true,
-    }).start();
-  };
+  const pressOut = () =>
+    Animated.spring(scale, { toValue: 1, friction: 5, useNativeDriver: true }).start();
 
   return (
     <TouchableOpacity
       activeOpacity={1}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
+      onPressIn={pressIn}
+      onPressOut={pressOut}
       onPress={onPress}
     >
       <Animated.View
-        style={[
-          {
-            transform: [{ scale }],
-            width: SCREEN_WIDTH * 0.42,
-          },
-        ]}
-        className="rounded-2xl bg-poddy-card mr-3 overflow-hidden"
+        style={{
+          width: CARD_WIDTH,
+          transform: [{ scale }],
+        }}
+        className="rounded-2xl overflow-hidden mb-3"
       >
-        {/* Purple accent stripe */}
-        <View className="h-1 bg-poddy-accent" />
-
-        <View className="p-3.5">
-          {/* Icon */}
+        {/* Artwork tile */}
+        <View
+          style={{
+            height: CARD_WIDTH * 0.72,
+            backgroundColor: "#0a0a0a",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {/* Abstract offset squares decoration */}
           <View
-            className="w-9 h-9 rounded-lg items-center justify-center mb-3"
-            style={{ backgroundColor: "#1a1025" }}
-          >
-            <Ionicons name="headset" size={18} color="#7c3aed" />
-          </View>
-
-          {/* Filename */}
+            style={{
+              position: "absolute",
+              top: 10,
+              left: 10,
+              width: 28,
+              height: 28,
+              borderWidth: 1.5,
+              borderColor: "rgba(255,255,255,0.15)",
+              borderRadius: 6,
+            }}
+          />
+          <View
+            style={{
+              position: "absolute",
+              bottom: 10,
+              right: 10,
+              width: 18,
+              height: 18,
+              borderWidth: 1.5,
+              borderColor: "rgba(255,255,255,0.1)",
+              borderRadius: 4,
+            }}
+          />
           <Text
-            className="text-white text-sm font-semibold mb-1.5"
+            style={{
+              color: "rgba(255,255,255,0.9)",
+              fontSize: 10,
+              fontWeight: "800",
+              letterSpacing: 1.5,
+              textAlign: "center",
+              paddingHorizontal: 8,
+            }}
+            numberOfLines={2}
+          >
+            {getShortLabel(item.original_filename)}
+          </Text>
+        </View>
+
+        {/* Card body */}
+        <View
+          style={{ borderWidth: 1, borderTopWidth: 0, borderColor: "#e8e8e8" }}
+          className="p-3 rounded-b-2xl bg-paper"
+        >
+          <Text
+            style={{
+              fontSize: 12,
+              fontWeight: "700",
+              color: "#0a0a0a",
+              lineHeight: 16,
+            }}
             numberOfLines={2}
           >
             {cleanFilename(item.original_filename)}
           </Text>
-
-          {/* Timestamp */}
-          <Text className="text-poddy-text-muted text-xs">
-            {timeAgo(item.created_at)}
-          </Text>
+          <View className="flex-row items-center justify-between mt-2">
+            <Text
+              style={{ fontSize: 10, color: "#8a8a8a", fontWeight: "500" }}
+            >
+              {timeAgo(item.created_at)}
+            </Text>
+            {/* Mini play button */}
+            <View
+              style={{
+                width: 22,
+                height: 22,
+                borderRadius: 11,
+                backgroundColor: "#0a0a0a",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Ionicons
+                name="play"
+                size={9}
+                color="#fff"
+                style={{ marginLeft: 1 }}
+              />
+            </View>
+          </View>
         </View>
       </Animated.View>
     </TouchableOpacity>
   );
 }
 
-// ─── Library Card (Full Width) ──────────────────────────────────────
+// ─── Featured Card (full-width, latest podcast) ────────────────────
 
-function LibraryCard({
+function FeaturedCard({
   item,
   onPress,
 }: {
@@ -212,79 +320,192 @@ function LibraryCard({
 }) {
   const scale = useRef(new Animated.Value(1)).current;
 
-  const handlePressIn = () => {
-    Animated.spring(scale, {
-      toValue: 0.98,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handlePressOut = () => {
+  const pressIn = () =>
+    Animated.spring(scale, { toValue: 0.98, useNativeDriver: true }).start();
+  const pressOut = () =>
     Animated.spring(scale, {
       toValue: 1,
-      friction: 4,
+      friction: 5,
       useNativeDriver: true,
     }).start();
-  };
 
   return (
     <TouchableOpacity
       activeOpacity={1}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
+      onPressIn={pressIn}
+      onPressOut={pressOut}
       onPress={onPress}
     >
       <Animated.View
         style={{ transform: [{ scale }] }}
-        className="flex-row items-center rounded-2xl bg-poddy-card p-4 mb-3"
+        className="rounded-2xl overflow-hidden mb-6"
       >
-        {/* Left icon */}
+        {/* Artwork */}
         <View
-          className="w-12 h-12 rounded-xl items-center justify-center"
-          style={{ backgroundColor: "#1a1025" }}
+          style={{
+            height: 180,
+            backgroundColor: "#0a0a0a",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: 20,
+            flexDirection: "row",
+          }}
         >
-          <Ionicons name="headset" size={22} color="#7c3aed" />
-        </View>
+          {/* Text content left */}
+          <View style={{ flex: 1, paddingRight: 16 }}>
+            <View
+              style={{
+                backgroundColor: "rgba(255,255,255,0.12)",
+                alignSelf: "flex-start",
+                paddingHorizontal: 8,
+                paddingVertical: 3,
+                borderRadius: 20,
+                marginBottom: 10,
+              }}
+            >
+              <Text
+                style={{
+                  color: "rgba(255,255,255,0.7)",
+                  fontSize: 9,
+                  fontWeight: "700",
+                  letterSpacing: 1.2,
+                }}
+              >
+                LATEST
+              </Text>
+            </View>
+            <Text
+              style={{
+                color: "#ffffff",
+                fontSize: 16,
+                fontWeight: "800",
+                lineHeight: 22,
+              }}
+              numberOfLines={3}
+            >
+              {cleanFilename(item.original_filename)}
+            </Text>
+            <Text
+              style={{
+                color: "rgba(255,255,255,0.45)",
+                fontSize: 11,
+                marginTop: 8,
+                fontWeight: "500",
+              }}
+            >
+              {timeAgo(item.created_at)} • AI Podcast
+            </Text>
+          </View>
 
-        {/* Center content */}
-        <View className="flex-1 ml-3 mr-3">
-          <Text
-            className="text-white text-[15px] font-semibold leading-5"
-            numberOfLines={2}
+          {/* Large play button right */}
+          <View
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: 26,
+              borderWidth: 1.5,
+              borderColor: "rgba(255,255,255,0.3)",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
-            {cleanFilename(item.original_filename)}
-          </Text>
-          <Text className="text-poddy-text-secondary text-xs mt-1">
-            AI Podcast • {timeAgo(item.created_at)}
-          </Text>
+            <Ionicons
+              name="play"
+              size={22}
+              color="#ffffff"
+              style={{ marginLeft: 2 }}
+            />
+          </View>
         </View>
 
-        {/* Play button */}
+        {/* Bottom strip */}
         <View
-          className="w-10 h-10 rounded-full items-center justify-center bg-poddy-accent"
+          style={{
+            backgroundColor: "#f5f5f5",
+            paddingHorizontal: 16,
+            paddingVertical: 10,
+            flexDirection: "row",
+            alignItems: "center",
+          }}
         >
-          <Ionicons
-            name="play"
-            size={18}
-            color="#ffffff"
-            style={{ marginLeft: 2 }}
-          />
+          <Ionicons name="headset-outline" size={13} color="#8a8a8a" />
+          <Text
+            style={{
+              color: "#8a8a8a",
+              fontSize: 11,
+              marginLeft: 5,
+              fontWeight: "600",
+            }}
+          >
+            Alex & Jamie · AI Study Podcast
+          </Text>
         </View>
       </Animated.View>
     </TouchableOpacity>
   );
 }
 
-// ─── Empty State ────────────────────────────────────────────────────
+// ─── Filter Tabs ──────────────────────────────────────────────────────
+
+function FilterTabs({
+  active,
+  onChange,
+}: {
+  active: FilterTab;
+  onChange: (t: FilterTab) => void;
+}) {
+  const tabs: { key: FilterTab; label: string }[] = [
+    { key: "all", label: "All" },
+    { key: "recent", label: "Recent" },
+    { key: "oldest", label: "Oldest" },
+  ];
+
+  return (
+    <View className="flex-row mb-6">
+      {tabs.map((t) => (
+        <TouchableOpacity
+          key={t.key}
+          onPress={() => onChange(t.key)}
+          activeOpacity={0.7}
+          style={{ marginRight: 8 }}
+        >
+          <View
+            style={{
+              paddingHorizontal: 16,
+              paddingVertical: 7,
+              borderRadius: 20,
+              backgroundColor: active === t.key ? "#0a0a0a" : "transparent",
+              borderWidth: 1,
+              borderColor: active === t.key ? "#0a0a0a" : "#d0d0d0",
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 13,
+                fontWeight: "600",
+                color: active === t.key ? "#ffffff" : "#8a8a8a",
+                letterSpacing: 0.2,
+              }}
+            >
+              {t.label}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+}
+
+// ─── Empty State ──────────────────────────────────────────────────────
 
 function EmptyState() {
-  const scale = useRef(new Animated.Value(0.9)).current;
+  const translateY = useRef(new Animated.Value(24)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.parallel([
-      Animated.spring(scale, {
-        toValue: 1,
+      Animated.spring(translateY, {
+        toValue: 0,
         friction: 6,
         useNativeDriver: true,
       }),
@@ -294,36 +515,72 @@ function EmptyState() {
         useNativeDriver: true,
       }),
     ]).start();
-  }, [scale, opacity]);
+  }, [translateY, opacity]);
 
   return (
     <Animated.View
-      style={{ transform: [{ scale }], opacity }}
-      className="flex-1 items-center justify-center px-8 -mt-16"
+      style={{ transform: [{ translateY }], opacity }}
+      className="flex-1 items-center justify-center px-8"
     >
-      {/* Icon container */}
-      <View
-        className="w-24 h-24 rounded-3xl items-center justify-center mb-6"
-        style={{ backgroundColor: "#161616" }}
+      {/* Big typographic "0" */}
+      <Text
+        style={{
+          fontSize: 120,
+          fontWeight: "900",
+          color: "#f0f0f0",
+          lineHeight: 130,
+          letterSpacing: -4,
+        }}
       >
-        <Ionicons name="headset-outline" size={44} color="#333333" />
-      </View>
-
-      <Text className="text-white text-xl font-bold mb-2 text-center">
-        No podcasts yet
+        0
       </Text>
-      <Text className="text-poddy-text-muted text-sm text-center leading-5 mb-8">
-        Upload your first PDF and let{"\n"}Poddy turn it into a study podcast
+      <Text
+        style={{
+          fontSize: 20,
+          fontWeight: "800",
+          color: "#0a0a0a",
+          marginTop: 8,
+          marginBottom: 8,
+          letterSpacing: -0.5,
+        }}
+      >
+        No podcasts yet.
+      </Text>
+      <Text
+        style={{
+          fontSize: 14,
+          color: "#8a8a8a",
+          textAlign: "center",
+          lineHeight: 20,
+          marginBottom: 32,
+        }}
+      >
+        Upload a PDF and Poddy turns it{"\n"}into a conversational podcast.
       </Text>
 
       <TouchableOpacity
-        className="bg-poddy-accent px-8 py-3.5 rounded-2xl"
         onPress={() => router.navigate("/(tabs)/upload")}
-        activeOpacity={0.8}
+        activeOpacity={0.85}
       >
-        <View className="flex-row items-center">
-          <Ionicons name="cloud-upload-outline" size={18} color="#ffffff" />
-          <Text className="text-white font-semibold text-[15px] ml-2">
+        <View
+          style={{
+            backgroundColor: "#0a0a0a",
+            paddingHorizontal: 28,
+            paddingVertical: 14,
+            borderRadius: 14,
+            flexDirection: "row",
+            alignItems: "center",
+          }}
+        >
+          <Ionicons name="arrow-up-circle-outline" size={18} color="#fff" />
+          <Text
+            style={{
+              color: "#fff",
+              fontWeight: "700",
+              fontSize: 15,
+              marginLeft: 8,
+            }}
+          >
             Upload PDF
           </Text>
         </View>
@@ -332,67 +589,66 @@ function EmptyState() {
   );
 }
 
-// ─── FAB ────────────────────────────────────────────────────────────
+// ─── FAB ─────────────────────────────────────────────────────────────
 
 function FAB({ onPress }: { onPress: () => void }) {
   const scale = useRef(new Animated.Value(1)).current;
 
-  const handlePressIn = () => {
-    Animated.spring(scale, {
-      toValue: 0.88,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handlePressOut = () => {
+  const pressIn = () =>
+    Animated.spring(scale, { toValue: 0.88, useNativeDriver: true }).start();
+  const pressOut = () =>
     Animated.spring(scale, {
       toValue: 1,
       friction: 4,
       tension: 200,
       useNativeDriver: true,
     }).start();
-  };
 
   return (
     <TouchableOpacity
       activeOpacity={1}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
+      onPressIn={pressIn}
+      onPressOut={pressOut}
       onPress={onPress}
-      style={{
-        position: "absolute",
-        bottom: 24,
-        right: 20,
-        zIndex: 50,
-      }}
+      style={{ position: "absolute", bottom: 24, right: 20, zIndex: 50 }}
     >
       <Animated.View
         style={[
           {
             transform: [{ scale }],
-            shadowColor: "#7c3aed",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.35,
-            shadowRadius: 12,
-            elevation: 8,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.18,
+            shadowRadius: 16,
+            elevation: 10,
           },
         ]}
-        className="w-14 h-14 rounded-full bg-poddy-accent items-center justify-center"
       >
-        <Ionicons name="add" size={28} color="#ffffff" />
+        <View
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: 28,
+            backgroundColor: "#0a0a0a",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Ionicons name="add" size={26} color="#ffffff" />
+        </View>
       </Animated.View>
     </TouchableOpacity>
   );
 }
 
-// ─── Main Screen ────────────────────────────────────────────────────
+// ─── Main Screen ──────────────────────────────────────────────────────
 
 export default function HomeScreen() {
   const [podcasts, setPodcasts] = useState<Podcast[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [filter, setFilter] = useState<FilterTab>("all");
 
-  // Fetch podcasts — swap mock data for real API call later
   const loadPodcasts = useCallback(async () => {
     try {
       // TODO: Replace with real API call
@@ -402,12 +658,10 @@ export default function HomeScreen() {
       // });
       // const data = await res.json();
       // setPodcasts(data.filter((p: Podcast) => p.status === 'done'));
-
-      // Mock: simulate network delay
-      await new Promise((resolve) => setTimeout(resolve, 1200));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       setPodcasts(MOCK_PODCASTS.filter((p) => p.status === "done"));
-    } catch (error) {
-      console.error("Failed to load podcasts:", error);
+    } catch (err) {
+      console.error("Failed to load podcasts:", err);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -426,125 +680,243 @@ export default function HomeScreen() {
   const handlePodcastPress = (podcast: Podcast) => {
     router.push({
       pathname: "/player/[id]",
-      params: {
-        id: podcast.id,
-        filename: podcast.original_filename,
-      },
+      params: { id: podcast.id, filename: podcast.original_filename },
     });
   };
 
-  // Split data
-  const recentPodcasts = podcasts.slice(0, 3);
-  const allPodcasts = podcasts;
+  // Sorted list based on filter
+  const filteredPodcasts = useMemo(() => {
+    const sorted = [...podcasts];
+    if (filter === "recent") {
+      sorted.sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    } else if (filter === "oldest") {
+      sorted.sort(
+        (a, b) =>
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
+    }
+    return sorted;
+  }, [podcasts, filter]);
 
-  // ─── Render ─────────────────────────────────────────────────
+  // Featured = most recent
+  const featured = filteredPodcasts[0];
+  // Grid = rest
+  const gridItems = filteredPodcasts.slice(1);
+
+  // Build pairs for the 2-col grid
+  const gridRows: Podcast[][] = [];
+  for (let i = 0; i < gridItems.length; i += 2) {
+    gridRows.push(gridItems.slice(i, i + 2));
+  }
+
+  // ─── Render ──────────────────────────────────────────────────────
 
   return (
-    <SafeAreaView className="flex-1 bg-poddy-bg" edges={["top"]}>
-      {/* Loading state */}
+    <SafeAreaView className="flex-1 bg-paper" edges={["top"]}>
       {loading ? (
-        <View className="flex-1 px-5 pt-4">
+        // ── SKELETON ──
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 40 }}
+          showsVerticalScrollIndicator={false}
+        >
           {/* Header skeleton */}
-          <View className="mb-8 mt-2">
-            <View className="h-8 w-28 rounded-lg bg-poddy-card mb-2" />
-            <View className="h-4 w-44 rounded bg-poddy-card" />
+          <View className="mb-6">
+            <View
+              style={{ height: 42, width: 160, backgroundColor: "#e8e8e8" }}
+              className="rounded-lg mb-2"
+            />
+            <View
+              style={{ height: 14, width: 220, backgroundColor: "#f0f0f0" }}
+              className="rounded"
+            />
           </View>
-          {/* Card skeletons */}
-          <SkeletonCard />
-          <SkeletonCard />
-          <SkeletonCard />
-        </View>
+          {/* Divider */}
+          <View style={{ height: 1, backgroundColor: "#e8e8e8" }} className="mb-5" />
+          {/* Filter skeleton */}
+          <View className="flex-row mb-6">
+            {[60, 70, 65].map((w, i) => (
+              <View
+                key={i}
+                style={{
+                  width: w,
+                  height: 34,
+                  backgroundColor: "#e8e8e8",
+                  borderRadius: 20,
+                  marginRight: 8,
+                }}
+              />
+            ))}
+          </View>
+          {/* Featured skeleton */}
+          <SkeletonCard wide />
+          {/* Grid skeleton */}
+          <View className="flex-row justify-between">
+            <SkeletonCard />
+            <SkeletonCard />
+          </View>
+        </ScrollView>
       ) : podcasts.length === 0 ? (
-        /* Empty state */
+        // ── EMPTY STATE ──
         <>
-          <View className="px-5 pt-4 mt-2">
-            <Text className="text-white text-3xl font-bold tracking-tight">
-              Poddy
+          <View className="px-5 pt-4">
+            <Text
+              style={{
+                fontSize: 38,
+                fontWeight: "900",
+                color: "#0a0a0a",
+                letterSpacing: -1.5,
+              }}
+            >
+              PODDY
             </Text>
-            <Text className="text-poddy-text-muted text-sm mt-1">
-              {getGreeting()}
+            <Text style={{ fontSize: 13, color: "#8a8a8a", marginTop: 2 }}>
+              Your study podcasts
             </Text>
           </View>
           <EmptyState />
         </>
       ) : (
-        /* Content state */
+        // ── CONTENT ──
         <>
-          <FlatList
-            data={allPodcasts}
-            keyExtractor={(item) => item.id}
+          <ScrollView
+            className="flex-1"
+            contentContainerStyle={{
+              paddingHorizontal: 20,
+              paddingTop: 16,
+              paddingBottom: 100,
+            }}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={onRefresh}
-                tintColor="#7c3aed"
-                colors={["#7c3aed"]}
+                tintColor="#0a0a0a"
+                colors={["#0a0a0a"]}
               />
             }
-            ListHeaderComponent={
-              <>
-                {/* ── Header ── */}
-                <View className="mt-2 mb-6">
-                  <Text className="text-white text-3xl font-bold tracking-tight">
-                    Poddy
+          >
+            {/* ── MASTHEAD HEADER ── */}
+            <View className="mb-5">
+              <View className="flex-row items-start justify-between">
+                <View>
+                  <Text
+                    style={{
+                      fontSize: 42,
+                      fontWeight: "900",
+                      color: "#0a0a0a",
+                      letterSpacing: -2,
+                      lineHeight: 44,
+                    }}
+                  >
+                    PODDY
                   </Text>
-                  <Text className="text-poddy-text-muted text-sm mt-1">
-                    {getGreeting()} — Your study podcasts
-                  </Text>
-                </View>
-
-                {/* ── Recent Section ── */}
-                {recentPodcasts.length > 0 && (
-                  <View className="mb-7">
-                    <View className="flex-row items-center justify-between mb-3.5">
-                      <Text className="text-white text-lg font-semibold">
-                        Recent
-                      </Text>
-                      <Ionicons
-                        name="chevron-forward"
-                        size={18}
-                        color="#6b7280"
-                      />
-                    </View>
-
-                    <FlatList
-                      data={recentPodcasts}
-                      keyExtractor={(item) => `recent-${item.id}`}
-                      horizontal
-                      showsHorizontalScrollIndicator={false}
-                      renderItem={({ item }) => (
-                        <RecentCard
-                          item={item}
-                          onPress={() => handlePodcastPress(item)}
-                        />
-                      )}
-                    />
-                  </View>
-                )}
-
-                {/* ── Library Section Header ── */}
-                <View className="flex-row items-center justify-between mb-3.5">
-                  <Text className="text-white text-lg font-semibold">
-                    Your Library
-                  </Text>
-                  <Text className="text-poddy-text-muted text-xs">
-                    {allPodcasts.length}{" "}
-                    {allPodcasts.length === 1 ? "podcast" : "podcasts"}
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      color: "#8a8a8a",
+                      marginTop: 3,
+                      fontWeight: "500",
+                      letterSpacing: 0.2,
+                    }}
+                  >
+                    {podcasts.length} podcast
+                    {podcasts.length !== 1 ? "s" : ""} in your library
                   </Text>
                 </View>
-              </>
-            }
-            renderItem={({ item }) => (
-              <LibraryCard
-                item={item}
-                onPress={() => handlePodcastPress(item)}
+
+                {/* Count badge */}
+                <View
+                  style={{
+                    marginTop: 4,
+                    width: 44,
+                    height: 44,
+                    borderRadius: 22,
+                    backgroundColor: "#0a0a0a",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: "#fff",
+                      fontSize: 16,
+                      fontWeight: "900",
+                    }}
+                  >
+                    {podcasts.length}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* ── RULE ── */}
+            <View
+              style={{ height: 1, backgroundColor: "#0a0a0a" }}
+              className="mb-5"
+            />
+
+            {/* ── FILTER TABS ── */}
+            <FilterTabs active={filter} onChange={setFilter} />
+
+            {/* ── FEATURED CARD ── */}
+            {featured && (
+              <FeaturedCard
+                item={featured}
+                onPress={() => handlePodcastPress(featured)}
               />
             )}
-          />
 
-          {/* FAB */}
+            {/* ── SECTION LABEL ── */}
+            {gridItems.length > 0 && (
+              <View className="flex-row items-center justify-between mb-4">
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontWeight: "700",
+                    color: "#8a8a8a",
+                    letterSpacing: 1.5,
+                  }}
+                >
+                  ALL EPISODES
+                </Text>
+                <View
+                  style={{
+                    flex: 1,
+                    height: 1,
+                    backgroundColor: "#e8e8e8",
+                    marginLeft: 12,
+                  }}
+                />
+              </View>
+            )}
+
+            {/* ── 2-COL GRID ── */}
+            {gridRows.map((row, rowIdx) => (
+              <View
+                key={rowIdx}
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                }}
+              >
+                {row.map((item) => (
+                  <GridCard
+                    key={item.id}
+                    item={item}
+                    onPress={() => handlePodcastPress(item)}
+                  />
+                ))}
+                {/* Spacer if odd row */}
+                {row.length === 1 && <View style={{ width: CARD_WIDTH }} />}
+              </View>
+            ))}
+          </ScrollView>
+
+          {/* ── FAB ── */}
           <FAB onPress={() => router.navigate("/(tabs)/upload")} />
         </>
       )}
