@@ -28,36 +28,60 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Library",
+          title: "Home",
           tabBarIcon: ({ color, focused }) => (
-            <View className="relative items-center justify-center">
-              <Ionicons
-                name={focused ? "library" : "library-outline"}
-                size={22}
-                color={color}
-              />
-              {focused && (
-                <View className="absolute -bottom-4 w-1 h-1 rounded-full bg-poddy-accent" />
-              )}
+            <Ionicons
+              name={focused ? "home" : "home-outline"}
+              size={22}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="explore"
+        options={{
+          title: "Explore",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "compass" : "compass-outline"}
+              size={22}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="create"
+        options={{
+          title: "Create",
+          tabBarIcon: ({ color, focused }) => (
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 12,
+                backgroundColor: focused ? "#7C3AED" : "#1C1C1E",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 2,
+              }}
+            >
+              <Ionicons name="add" size={22} color={focused ? "#fff" : "#888"} />
             </View>
           ),
         }}
       />
       <Tabs.Screen
-        name="upload"
+        name="library"
         options={{
-          title: "Upload",
+          title: "Library",
           tabBarIcon: ({ color, focused }) => (
-            <View className="relative items-center justify-center">
-              <Ionicons
-                name={focused ? "cloud-upload" : "cloud-upload-outline"}
-                size={24}
-                color={color}
-              />
-              {focused && (
-                <View className="absolute -bottom-4 w-1 h-1 rounded-full bg-poddy-accent" />
-              )}
-            </View>
+            <Ionicons
+              name={focused ? "library" : "library-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />

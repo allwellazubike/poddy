@@ -1,16 +1,20 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   View,
   Text,
   FlatList,
   TouchableOpacity,
+  Animated,
   RefreshControl,
+  Dimensions,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
 const API_BASE = "http://YOUR_BACKEND_IP:5000";
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -22,122 +26,237 @@ interface Podcast {
   created_at: string;
 }
 
-// ─── Mock Data ───────────────────────────────────────────────────────
+interface PublicPodcast {
+  id: string;
+  title: string;
+  creator: string;
+  niche: string;
+  duration: string;
+  plays: number;
+  created_at: string;
+}
 
-const MOCK_PODCASTS: Podcast[] = [
+// ─── Mock Data — Your Podcasts ───────────────────────────────────────
+
+const MOCK_MY_PODCASTS: Podcast[] = [
   {
     id: "1",
-    original_filename: "Biology Chapter 5 - Cell Division and Mitosis.pdf",
+    original_filename: "Biology Chapter 5 - Cell Division.pdf",
     status: "done",
     audio_url: "audio/1.mp3",
-    created_at: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 1 * 3600000).toISOString(),
   },
   {
     id: "2",
-    original_filename: "Computer Science - Data Structures and Algorithms.pdf",
+    original_filename: "Data Structures and Algorithms.pdf",
     status: "done",
     audio_url: "audio/2.mp3",
-    created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 3 * 3600000).toISOString(),
   },
   {
     id: "3",
-    original_filename: "Psychology 201 - Cognitive Behavioral Theory.pdf",
+    original_filename: "Cognitive Behavioral Theory.pdf",
     status: "done",
     audio_url: "audio/3.mp3",
-    created_at: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "4",
-    original_filename: "Organic Chemistry - Reaction Mechanisms.pdf",
-    status: "done",
-    audio_url: "audio/4.mp3",
-    created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "5",
-    original_filename: "World History - The French Revolution.pdf",
-    status: "done",
-    audio_url: "audio/5.mp3",
-    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 8 * 3600000).toISOString(),
   },
 ];
 
+// ─── Mock Data — Discover (other users' public podcasts) ─────────────
+
+const MOCK_DISCOVER: PublicPodcast[] = [
+  {
+    id: "d1",
+    title: "Neural Networks Explained Simply",
+    creator: "Sarah K.",
+    niche: "Computer Science",
+    duration: "8 min",
+    plays: 342,
+    created_at: new Date(Date.now() - 2 * 3600000).toISOString(),
+  },
+  {
+    id: "d2",
+    title: "The Krebs Cycle - A Deep Dive",
+    creator: "James O.",
+    niche: "Biology",
+    duration: "6 min",
+    plays: 128,
+    created_at: new Date(Date.now() - 5 * 3600000).toISOString(),
+  },
+  {
+    id: "d3",
+    title: "Constitutional Law Fundamentals",
+    creator: "Ade M.",
+    niche: "Law",
+    duration: "11 min",
+    plays: 89,
+    created_at: new Date(Date.now() - 12 * 3600000).toISOString(),
+  },
+  {
+    id: "d4",
+    title: "Freudian Psychology vs Modern CBT",
+    creator: "Lena R.",
+    niche: "Psychology",
+    duration: "9 min",
+    plays: 215,
+    created_at: new Date(Date.now() - 18 * 3600000).toISOString(),
+  },
+  {
+    id: "d5",
+    title: "Introduction to Organic Synthesis",
+    creator: "Tobi A.",
+    niche: "Chemistry",
+    duration: "7 min",
+    plays: 67,
+    created_at: new Date(Date.now() - 24 * 3600000).toISOString(),
+  },
+  {
+    id: "d6",
+    title: "Calculus II - Integration by Parts",
+    creator: "Maria C.",
+    niche: "Mathematics",
+    duration: "5 min",
+    plays: 431,
+    created_at: new Date(Date.now() - 36 * 3600000).toISOString(),
+  },
+];
+
+// ─── Niche colors ────────────────────────────────────────────────────
+
+const NICHE_COLORS: Record<string, string> = {
+  "Computer Science": "#7C3AED",
+  Biology: "#059669",
+  Law: "#D97706",
+  Psychology: "#DB2777",
+  Chemistry: "#2563EB",
+  Mathematics: "#DC2626",
+};
+
+function getNicheColor(niche: string): string {
+  return NICHE_COLORS[niche] || "#555555";
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────
 
-function timeAgo(dateString: string): string {
-  const seconds = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
-  if (seconds < 60) return "Just now";
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`;
-  if (seconds < 604800) return `${Math.floor(seconds / 86400)}d`;
-  return new Date(dateString).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
+function timeAgo(d: string): string {
+  const s = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
+  if (s < 60) return "Just now";
+  if (s < 3600) return `${Math.floor(s / 60)}m`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h`;
+  if (s < 604800) return `${Math.floor(s / 86400)}d`;
+  return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-function cleanFilename(filename: string): string {
-  return filename.replace(/\.pdf$/i, "");
+function cleanFilename(f: string): string {
+  return f.replace(/\.pdf$/i, "");
 }
 
-// ─── Skeleton Row ────────────────────────────────────────────────────
-
-function SkeletonRow() {
-  return (
-    <View className="flex-row items-center bg-poddy-surface border border-poddy-border px-4 py-4 mb-2 rounded-xl">
-      <View className="w-8 h-8 rounded-lg bg-poddy-border mr-4" />
-      <View className="flex-1">
-        <View className="h-4 w-3/4 rounded bg-poddy-border mb-2" />
-        <View className="h-3 w-1/3 rounded bg-poddy-border" />
-      </View>
-    </View>
-  );
+function formatPlays(n: number): string {
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+  return String(n);
 }
 
-// ─── List Row ────────────────────────────────────────────────────────
+// ─── Skeleton ────────────────────────────────────────────────────────
 
-function ListRow({ item, onPress }: { item: Podcast; onPress: () => void }) {
+function SkeletonPulse({ w, h, r = 8, mb = 0 }: { w: number | string; h: number; r?: number; mb?: number }) {
+  const op = useRef(new Animated.Value(0.3)).current;
+  useEffect(() => {
+    const a = Animated.loop(
+      Animated.sequence([
+        Animated.timing(op, { toValue: 0.7, duration: 800, useNativeDriver: true }),
+        Animated.timing(op, { toValue: 0.3, duration: 800, useNativeDriver: true }),
+      ])
+    );
+    a.start();
+    return () => a.stop();
+  }, [op]);
+  return <Animated.View style={{ opacity: op, width: w as any, height: h, borderRadius: r, backgroundColor: "#1C1C1E", marginBottom: mb }} />;
+}
+
+// ─── Recent Card (Horizontal) ────────────────────────────────────────
+
+const RECENT_W = SCREEN_WIDTH * 0.38;
+
+function RecentCard({ item, onPress }: { item: Podcast; onPress: () => void }) {
   return (
     <TouchableOpacity activeOpacity={0.7} onPress={onPress}>
-      <View className="flex-row items-center bg-poddy-surface border border-poddy-border px-4 py-4 mb-2 rounded-xl">
-        {/* Icon */}
-        <View className="w-8 h-8 rounded-lg bg-poddy-accent-soft items-center justify-center mr-4">
-          <Ionicons name="headset" size={16} color="#7C3AED" />
+      <View
+        style={{ width: RECENT_W }}
+        className="bg-poddy-surface border border-poddy-border rounded-2xl mr-3 overflow-hidden"
+      >
+        {/* Thumbnail area */}
+        <View className="w-full aspect-square bg-poddy-accent-soft items-center justify-center">
+          <Ionicons name="headset" size={28} color="#7C3AED" />
         </View>
-
-        {/* Text content */}
-        <View className="flex-1 mr-4">
-          <Text className="text-poddy-text-primary text-[15px] font-medium leading-5 mb-1" numberOfLines={1}>
+        {/* Info */}
+        <View className="p-3">
+          <Text className="text-poddy-text-primary text-[13px] font-semibold leading-4 mb-1" numberOfLines={2}>
             {cleanFilename(item.original_filename)}
           </Text>
-          <View className="flex-row items-center">
-            <Text className="text-poddy-text-secondary text-[13px]">AI Podcast</Text>
-            <View className="w-1 h-1 rounded-full bg-poddy-text-muted mx-2" />
-            <Text className="text-poddy-text-secondary text-[13px]">
-              {timeAgo(item.created_at)}
-            </Text>
-          </View>
+          <Text className="text-poddy-text-muted text-[11px]">{timeAgo(item.created_at)}</Text>
         </View>
-
-        {/* Play Icon */}
-        <Ionicons name="play-outline" size={20} color="#888888" />
       </View>
     </TouchableOpacity>
   );
 }
 
-// ─── Empty State ──────────────────────────────────────────────────────
+// ─── Discover Row ────────────────────────────────────────────────────
 
-function EmptyState() {
+function DiscoverRow({ item, onPress }: { item: PublicPodcast; onPress: () => void }) {
+  const nicheColor = getNicheColor(item.niche);
+
   return (
-    <View className="flex-1 items-center justify-center px-8 mt-12">
-      <View className="w-16 h-16 rounded-2xl bg-poddy-surface border border-poddy-border items-center justify-center mb-6">
-        <Ionicons name="document-text-outline" size={28} color="#888888" />
+    <TouchableOpacity activeOpacity={0.7} onPress={onPress}>
+      <View className="flex-row items-center bg-poddy-surface border border-poddy-border rounded-xl px-4 py-3.5 mb-2">
+        {/* Creator avatar */}
+        <View
+          style={{ backgroundColor: nicheColor + "20", borderWidth: 1, borderColor: nicheColor + "40" }}
+          className="w-10 h-10 rounded-full items-center justify-center mr-3"
+        >
+          <Text style={{ color: nicheColor, fontSize: 14, fontWeight: "700" }}>
+            {item.creator[0]}
+          </Text>
+        </View>
+
+        {/* Content */}
+        <View className="flex-1 mr-3">
+          <Text className="text-poddy-text-primary text-[14px] font-semibold leading-5 mb-1" numberOfLines={1}>
+            {item.title}
+          </Text>
+          <View className="flex-row items-center">
+            <Text className="text-poddy-text-secondary text-[12px]">{item.creator}</Text>
+            <View className="w-1 h-1 rounded-full bg-poddy-text-muted mx-1.5" />
+            <View style={{ backgroundColor: nicheColor + "18", borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1 }}>
+              <Text style={{ color: nicheColor, fontSize: 10, fontWeight: "600" }}>{item.niche}</Text>
+            </View>
+            <View className="w-1 h-1 rounded-full bg-poddy-text-muted mx-1.5" />
+            <Text className="text-poddy-text-muted text-[11px]">{item.duration}</Text>
+          </View>
+        </View>
+
+        {/* Stats + Play */}
+        <View className="items-end">
+          <Ionicons name="play-circle" size={28} color="#7C3AED" />
+          <Text className="text-poddy-text-muted text-[10px] mt-1">
+            {formatPlays(item.plays)} plays
+          </Text>
+        </View>
       </View>
-      <Text className="text-poddy-text-primary text-[18px] font-medium mb-2">No podcasts yet</Text>
-      <Text className="text-poddy-text-secondary text-[14px] text-center leading-5">
-        Upload a PDF to instantly generate a two-host AI study podcast.
-      </Text>
+    </TouchableOpacity>
+  );
+}
+
+// ─── Section Header ──────────────────────────────────────────────────
+
+function SectionHeader({ title, onSeeAll }: { title: string; onSeeAll?: () => void }) {
+  return (
+    <View className="flex-row items-center justify-between mb-3">
+      <Text className="text-poddy-text-primary text-[18px] font-bold tracking-tight">{title}</Text>
+      {onSeeAll && (
+        <TouchableOpacity onPress={onSeeAll} activeOpacity={0.6}>
+          <Text className="text-poddy-accent text-[13px] font-medium">See all</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -145,99 +264,130 @@ function EmptyState() {
 // ─── Main Screen ──────────────────────────────────────────────────────
 
 export default function HomeScreen() {
-  const [podcasts, setPodcasts] = useState<Podcast[]>([]);
+  const [myPodcasts, setMyPodcasts] = useState<Podcast[]>([]);
+  const [discover, setDiscover] = useState<PublicPodcast[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadPodcasts = useCallback(async () => {
+  const loadData = useCallback(async () => {
     try {
-      // TODO: Replace with real API call
-      // const token = await getToken();
-      // const res = await fetch(`${API_BASE}/api/podcasts`, { headers: { Authorization: `Bearer ${token}` } });
-      // const data = await res.json();
-      // setPodcasts(data.filter((p: Podcast) => p.status === 'done'));
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      setPodcasts(MOCK_PODCASTS.filter((p) => p.status === "done"));
+      // TODO: Replace with real API calls
+      await new Promise((r) => setTimeout(r, 800));
+      setMyPodcasts(MOCK_MY_PODCASTS.filter((p) => p.status === "done"));
+      setDiscover(MOCK_DISCOVER);
     } catch (err) {
-      console.error("Failed to load podcasts:", err);
+      console.error(err);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   }, []);
 
-  useEffect(() => {
-    loadPodcasts();
-  }, [loadPodcasts]);
+  useEffect(() => { loadData(); }, [loadData]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    loadPodcasts();
-  }, [loadPodcasts]);
+    loadData();
+  }, [loadData]);
 
-  const handlePodcastPress = (podcast: Podcast) => {
+  const handleMyPodcastPress = (p: Podcast) => {
     router.push({
+      //@ts-ignore
       pathname: "/player/[id]",
-      params: { id: podcast.id, filename: podcast.original_filename },
+      params: { id: p.id, filename: p.original_filename },
     });
   };
 
   return (
     <SafeAreaView className="flex-1 bg-poddy-bg" edges={["top"]}>
-      {/* ── HEADER ── */}
-      <View className="flex-row items-center justify-between px-5 pt-4 pb-6">
-        <Text className="text-poddy-text-primary text-[22px] font-semibold tracking-tight">Poddy</Text>
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={() => router.navigate("/(tabs)/upload")}
-          className="flex-row items-center bg-poddy-surface border border-poddy-border px-3 py-1.5 rounded-lg"
-        >
-          <Ionicons name="add" size={16} color="#EEEEEE" />
-          <Text className="text-poddy-text-primary text-[13px] font-medium ml-1">Upload PDF</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* ── CONTENT ── */}
-      <View className="flex-1 px-5">
-        <View className="flex-row items-center mb-4">
-          <Ionicons name="list" size={14} color="#888888" />
-          <Text className="text-poddy-text-secondary text-[13px] font-medium ml-2 uppercase tracking-widest">
-            Your Library
-          </Text>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 40 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7C3AED" colors={["#7C3AED"]} />
+        }
+      >
+        {/* ── HEADER ── */}
+        <View className="flex-row items-center justify-between px-5 pt-4 pb-5">
+          <Text className="text-poddy-text-primary text-[24px] font-bold tracking-tight">Poddy</Text>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => {/* TODO: navigate to profile */}}
+            className="w-9 h-9 rounded-full bg-poddy-surface border border-poddy-border items-center justify-center"
+          >
+            <Ionicons name="person" size={16} color="#888888" />
+          </TouchableOpacity>
         </View>
 
         {loading ? (
           // ── SKELETON ──
-          <View>
-            <SkeletonRow />
-            <SkeletonRow />
-            <SkeletonRow />
-            <SkeletonRow />
+          <View className="px-5">
+            {/* Recent skeleton */}
+            <SkeletonPulse w={100} h={16} mb={12} />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-8">
+              {[0, 1, 2].map((i) => (
+                <View key={i} style={{ width: RECENT_W, marginRight: 12 }}>
+                  <SkeletonPulse w={RECENT_W} h={RECENT_W} r={16} mb={0} />
+                  <View className="p-3">
+                    <SkeletonPulse w="80%" h={12} mb={6} />
+                    <SkeletonPulse w="40%" h={10} />
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+            {/* Discover skeleton */}
+            <SkeletonPulse w={120} h={16} mb={12} />
+            {[0, 1, 2, 3].map((i) => (
+              <View key={i} className="flex-row items-center mb-3">
+                <SkeletonPulse w={40} h={40} r={20} mb={0} />
+                <View className="flex-1 ml-3">
+                  <SkeletonPulse w="75%" h={14} mb={6} />
+                  <SkeletonPulse w="50%" h={10} />
+                </View>
+              </View>
+            ))}
           </View>
-        ) : podcasts.length === 0 ? (
-          // ── EMPTY STATE ──
-          <EmptyState />
         ) : (
-          // ── LIST ──
-          <FlatList
-            data={podcasts}
-            keyExtractor={(item) => item.id}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 100 }}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                tintColor="#7C3AED"
-                colors={["#7C3AED"]}
-              />
-            }
-            renderItem={({ item }) => (
-              <ListRow item={item} onPress={() => handlePodcastPress(item)} />
+          <>
+            {/* ── YOUR RECENT ── */}
+            {myPodcasts.length > 0 && (
+              <View className="mb-7">
+                <View className="px-5">
+                  <SectionHeader
+                    title="Your Recent"
+                    onSeeAll={() => router.navigate("/(tabs)/library")}
+                  />
+                </View>
+                <FlatList
+                  data={myPodcasts}
+                  keyExtractor={(item) => `recent-${item.id}`}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ paddingHorizontal: 20 }}
+                  renderItem={({ item }) => (
+                    <RecentCard item={item} onPress={() => handleMyPodcastPress(item)} />
+                  )}
+                />
+              </View>
             )}
-          />
+
+            {/* ── DISCOVER ── */}
+            <View className="px-5">
+              <SectionHeader title="Discover" />
+
+              {discover.map((item) => (
+                <DiscoverRow
+                  key={item.id}
+                  item={item}
+                  onPress={() => {
+                    /* TODO: navigate to public podcast player */
+                  }}
+                />
+              ))}
+            </View>
+          </>
         )}
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
