@@ -9,12 +9,12 @@ export default function RootLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: "#0D0C0A" },
-          animation: "fade_from_bottom",
+          contentStyle: { backgroundColor: "#080808" },
+          animation: "slide_from_right",
         }}
       >
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="index" />
+        <Stack.Screen name="index" options={{ headerShown: false }} />
       </Stack>
     </>
   );

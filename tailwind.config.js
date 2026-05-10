@@ -11,15 +11,17 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        base: "#0D0C0A",
-        surface: "#1C1A16",
-        "surface-2": "#252320",
-        rim: "#2E2C28",
-        gold: "#F4A535",
-        "gold-dim": "#1E1A08",
-        cream: "#F2EDE6",
-        "cream-dim": "#9A9288",
-        "cream-faint": "#6A6258",
+        poddy: {
+          bg: '#080808',
+          surface: '#121212',
+          'surface-hover': '#1A1A1A',
+          border: '#222222',
+          accent: '#7C3AED',
+          'accent-soft': '#2A1A4A',
+          'text-primary': '#EEEEEE',
+          'text-secondary': '#888888',
+          'text-muted': '#555555',
+        },
       },
     },
   },

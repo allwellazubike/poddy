@@ -4,12 +4,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function UploadScreen() {
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#0D0C0A" }}>
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 24 }}>
-        <Text style={{ fontSize: 22, fontWeight: "800", color: "#F2EDE6", letterSpacing: -0.5 }}>
-          Upload
-        </Text>
-        <Text style={{ fontSize: 13, color: "#6A6258", marginTop: 6 }}>
+    <SafeAreaView className="flex-1 bg-poddy-bg">
+      <View className="flex-1 items-center justify-center px-6">
+        <Text className="text-poddy-text-primary text-[18px] font-medium">Upload</Text>
+        <Text className="text-poddy-text-secondary text-[14px] mt-2">
           Coming soon...
         </Text>
       </View>

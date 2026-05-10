@@ -8,21 +8,20 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "#161410",
-          borderTopColor: "#2E2C28",
+          backgroundColor: "#080808",
+          borderTopColor: "#222222",
           borderTopWidth: 1,
           height: Platform.OS === "ios" ? 88 : 65,
-          paddingBottom: Platform.OS === "ios" ? 28 : 10,
-          paddingTop: 10,
+          paddingBottom: Platform.OS === "ios" ? 30 : 10,
+          paddingTop: 8,
           elevation: 0,
         },
-        tabBarActiveTintColor: "#F4A535",
-        tabBarInactiveTintColor: "#6A6258",
+        tabBarActiveTintColor: "#EEEEEE",
+        tabBarInactiveTintColor: "#555555",
         tabBarLabelStyle: {
           fontSize: 10,
           fontWeight: "600",
-          letterSpacing: 0.8,
-          textTransform: "uppercase",
+          marginTop: 2,
         },
       }}
     >
@@ -31,21 +30,15 @@ export default function TabsLayout() {
         options={{
           title: "Library",
           tabBarIcon: ({ color, focused }) => (
-            <View
-              style={{
-                width: 36,
-                height: 28,
-                borderRadius: 8,
-                backgroundColor: focused ? "#1E1A08" : "transparent",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
+            <View className="relative items-center justify-center">
               <Ionicons
-                name={focused ? "headset" : "headset-outline"}
-                size={20}
+                name={focused ? "library" : "library-outline"}
+                size={22}
                 color={color}
               />
+              {focused && (
+                <View className="absolute -bottom-4 w-1 h-1 rounded-full bg-poddy-accent" />
+              )}
             </View>
           ),
         }}
@@ -55,21 +48,15 @@ export default function TabsLayout() {
         options={{
           title: "Upload",
           tabBarIcon: ({ color, focused }) => (
-            <View
-              style={{
-                width: 36,
-                height: 28,
-                borderRadius: 8,
-                backgroundColor: focused ? "#1E1A08" : "transparent",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
+            <View className="relative items-center justify-center">
               <Ionicons
                 name={focused ? "cloud-upload" : "cloud-upload-outline"}
-                size={20}
+                size={24}
                 color={color}
               />
+              {focused && (
+                <View className="absolute -bottom-4 w-1 h-1 rounded-full bg-poddy-accent" />
+              )}
             </View>
           ),
         }}
