@@ -1,31 +1,29 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-} from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  Animated,
-  RefreshControl,
-  Dimensions,
-  ScrollView,
+  View, Text, TouchableOpacity, Animated, ScrollView,
+  RefreshControl, Dimensions, FlatList,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
 const API_BASE = "http://YOUR_BACKEND_IP:5000";
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const CARD_GAP = 12;
-const CARD_WIDTH = (SCREEN_WIDTH - 40 - CARD_GAP) / 2;
+const { width: SW } = Dimensions.get("window");
 
-// ─── Types ──────────────────────────────────────────────────────────
+// ── Palette ─────────────────────────────────────────────────────────
+const C = {
+  base: "#0D0C0A",
+  surface: "#1C1A16",
+  surface2: "#252320",
+  rim: "#2E2C28",
+  gold: "#F4A535",
+  goldDim: "#1E1A08",
+  cream: "#F2EDE6",
+  creamDim: "#9A9288",
+  creamFaint: "#6A6258",
+};
 
+// ── Types ────────────────────────────────────────────────────────────
 interface Podcast {
   id: string;
   original_filename: string;
@@ -34,886 +32,363 @@ interface Podcast {
   created_at: string;
 }
 
-type FilterTab = "all" | "recent" | "oldest";
-
-// ─── Mock Data ───────────────────────────────────────────────────────
-
-const MOCK_PODCASTS: Podcast[] = [
-  {
-    id: "1",
-    original_filename: "Biology Chapter 5 - Cell Division and Mitosis.pdf",
-    status: "done",
-    audio_url: "audio/1.mp3",
-    created_at: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "2",
-    original_filename: "Computer Science - Data Structures and Algorithms.pdf",
-    status: "done",
-    audio_url: "audio/2.mp3",
-    created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "3",
-    original_filename: "Psychology 201 - Cognitive Behavioral Theory.pdf",
-    status: "done",
-    audio_url: "audio/3.mp3",
-    created_at: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "4",
-    original_filename: "Organic Chemistry - Reaction Mechanisms.pdf",
-    status: "done",
-    audio_url: "audio/4.mp3",
-    created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "5",
-    original_filename: "World History - The French Revolution.pdf",
-    status: "done",
-    audio_url: "audio/5.mp3",
-    created_at: new Date(
-      Date.now() - 3 * 24 * 60 * 60 * 1000
-    ).toISOString(),
-  },
-  {
-    id: "6",
-    original_filename: "Mathematics - Calculus Integration Techniques.pdf",
-    status: "done",
-    audio_url: "audio/6.mp3",
-    created_at: new Date(
-      Date.now() - 5 * 24 * 60 * 60 * 1000
-    ).toISOString(),
-  },
+// ── Mock Data ────────────────────────────────────────────────────────
+const MOCK: Podcast[] = [
+  { id: "1", original_filename: "Biology Chapter 5 - Cell Division and Mitosis.pdf", status: "done", audio_url: "audio/1.mp3", created_at: new Date(Date.now() - 1 * 3600000).toISOString() },
+  { id: "2", original_filename: "Computer Science - Data Structures and Algorithms.pdf", status: "done", audio_url: "audio/2.mp3", created_at: new Date(Date.now() - 3 * 3600000).toISOString() },
+  { id: "3", original_filename: "Psychology 201 - Cognitive Behavioral Theory.pdf", status: "done", audio_url: "audio/3.mp3", created_at: new Date(Date.now() - 8 * 3600000).toISOString() },
+  { id: "4", original_filename: "Organic Chemistry - Reaction Mechanisms.pdf", status: "done", audio_url: "audio/4.mp3", created_at: new Date(Date.now() - 86400000).toISOString() },
+  { id: "5", original_filename: "World History - The French Revolution.pdf", status: "done", audio_url: "audio/5.mp3", created_at: new Date(Date.now() - 3 * 86400000).toISOString() },
+  { id: "6", original_filename: "Mathematics - Calculus Integration Techniques.pdf", status: "done", audio_url: "audio/6.mp3", created_at: new Date(Date.now() - 5 * 86400000).toISOString() },
 ];
 
-// ─── Helpers ─────────────────────────────────────────────────────────
-
-function timeAgo(dateString: string): string {
-  const seconds = Math.floor(
-    (Date.now() - new Date(dateString).getTime()) / 1000
-  );
-  if (seconds < 60) return "Just now";
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-  if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
-  return new Date(dateString).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-  });
+// ── Helpers ──────────────────────────────────────────────────────────
+function timeAgo(d: string) {
+  const s = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
+  if (s < 60) return "Just now";
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+  if (s < 604800) return `${Math.floor(s / 86400)}d ago`;
+  return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
-function cleanFilename(filename: string): string {
-  return filename.replace(/\.pdf$/i, "");
+function clean(name: string) { return name.replace(/\.pdf$/i, ""); }
+
+function initials(name: string) {
+  const words = clean(name).split(/[\s\-_]+/).filter(Boolean);
+  return words.slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
 }
 
-// A short label (1-2 words) derived from the filename for the artwork tile
-function getShortLabel(filename: string): string {
-  const clean = cleanFilename(filename);
-  const words = clean.split(/[\s\-_]+/).filter(Boolean);
-  // Skip leading noise words
-  const noise = new Set(["chapter", "the", "a", "an", "of", "and", "&"]);
-  const meaningful = words.filter((w) => !noise.has(w.toLowerCase()));
-  return meaningful.slice(0, 2).join(" ").toUpperCase() || clean.slice(0, 6).toUpperCase();
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  if (h < 21) return "Good evening";
+  return "Burning the midnight oil";
 }
 
-// ─── Skeleton ────────────────────────────────────────────────────────
-
-function SkeletonCard({ wide }: { wide?: boolean }) {
-  const opacity = useRef(new Animated.Value(0.4)).current;
-
+// ── Skeleton ─────────────────────────────────────────────────────────
+function Shimmer({ w, h, radius = 8 }: { w: number | string; h: number; radius?: number }) {
+  const op = useRef(new Animated.Value(0.3)).current;
   useEffect(() => {
-    const anim = Animated.loop(
-      Animated.sequence([
-        Animated.timing(opacity, {
-          toValue: 0.8,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacity, {
-          toValue: 0.4,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    anim.start();
-    return () => anim.stop();
-  }, [opacity]);
-
-  if (wide) {
-    return (
-      <Animated.View
-        style={{ opacity, marginBottom: 12 }}
-        className="rounded-2xl overflow-hidden"
-      >
-        <View
-          style={{ height: 160, backgroundColor: "#e8e8e8" }}
-          className="w-full"
-        />
-        <View className="p-4 border border-paper-mid rounded-b-2xl">
-          <View
-            style={{ height: 12, width: "60%", backgroundColor: "#e8e8e8" }}
-            className="rounded mb-2"
-          />
-          <View
-            style={{ height: 10, width: "40%", backgroundColor: "#e8e8e8" }}
-            className="rounded"
-          />
-        </View>
-      </Animated.View>
-    );
-  }
-
+    const a = Animated.loop(Animated.sequence([
+      Animated.timing(op, { toValue: 0.7, duration: 800, useNativeDriver: true }),
+      Animated.timing(op, { toValue: 0.3, duration: 800, useNativeDriver: true }),
+    ]));
+    a.start(); return () => a.stop();
+  }, [op]);
   return (
-    <Animated.View
-      style={{ opacity, width: CARD_WIDTH, marginBottom: 12 }}
-      className="rounded-2xl overflow-hidden border border-paper-mid"
-    >
-      <View style={{ height: 100, backgroundColor: "#e8e8e8" }} />
-      <View style={{ backgroundColor: "#f5f5f5" }} className="p-3">
-        <View
-          style={{ height: 10, width: "80%", backgroundColor: "#e8e8e8" }}
-          className="rounded mb-2"
-        />
-        <View
-          style={{ height: 8, width: "50%", backgroundColor: "#e8e8e8" }}
-          className="rounded"
-        />
-      </View>
-    </Animated.View>
+    <Animated.View style={{ opacity: op, width: w as any, height: h, borderRadius: radius, backgroundColor: C.surface2 }} />
   );
 }
 
-// ─── Grid Card (small, 2-column) ─────────────────────────────────────
-
-function GridCard({ item, onPress }: { item: Podcast; onPress: () => void }) {
-  const scale = useRef(new Animated.Value(1)).current;
-
-  const pressIn = () =>
-    Animated.spring(scale, {
-      toValue: 0.96,
-      useNativeDriver: true,
-    }).start();
-
-  const pressOut = () =>
-    Animated.spring(scale, { toValue: 1, friction: 5, useNativeDriver: true }).start();
-
+// ── Artwork tile shared across card types ─────────────────────────────
+function Artwork({ name, size }: { name: string; size: number }) {
+  const label = initials(name);
   return (
-    <TouchableOpacity
-      activeOpacity={1}
-      onPressIn={pressIn}
-      onPressOut={pressOut}
-      onPress={onPress}
-    >
-      <Animated.View
-        style={{
-          width: CARD_WIDTH,
-          transform: [{ scale }],
-        }}
-        className="rounded-2xl overflow-hidden mb-3"
-      >
-        {/* Artwork tile */}
-        <View
-          style={{
-            height: CARD_WIDTH * 0.72,
-            backgroundColor: "#0a0a0a",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {/* Abstract offset squares decoration */}
-          <View
-            style={{
-              position: "absolute",
-              top: 10,
-              left: 10,
-              width: 28,
-              height: 28,
-              borderWidth: 1.5,
-              borderColor: "rgba(255,255,255,0.15)",
-              borderRadius: 6,
-            }}
-          />
-          <View
-            style={{
-              position: "absolute",
-              bottom: 10,
-              right: 10,
-              width: 18,
-              height: 18,
-              borderWidth: 1.5,
-              borderColor: "rgba(255,255,255,0.1)",
-              borderRadius: 4,
-            }}
-          />
-          <Text
-            style={{
-              color: "rgba(255,255,255,0.9)",
-              fontSize: 10,
-              fontWeight: "800",
-              letterSpacing: 1.5,
-              textAlign: "center",
-              paddingHorizontal: 8,
-            }}
-            numberOfLines={2}
-          >
-            {getShortLabel(item.original_filename)}
-          </Text>
-        </View>
-
-        {/* Card body */}
-        <View
-          style={{ borderWidth: 1, borderTopWidth: 0, borderColor: "#e8e8e8" }}
-          className="p-3 rounded-b-2xl bg-paper"
-        >
-          <Text
-            style={{
-              fontSize: 12,
-              fontWeight: "700",
-              color: "#0a0a0a",
-              lineHeight: 16,
-            }}
-            numberOfLines={2}
-          >
-            {cleanFilename(item.original_filename)}
-          </Text>
-          <View className="flex-row items-center justify-between mt-2">
-            <Text
-              style={{ fontSize: 10, color: "#8a8a8a", fontWeight: "500" }}
-            >
-              {timeAgo(item.created_at)}
-            </Text>
-            {/* Mini play button */}
-            <View
-              style={{
-                width: 22,
-                height: 22,
-                borderRadius: 11,
-                backgroundColor: "#0a0a0a",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Ionicons
-                name="play"
-                size={9}
-                color="#fff"
-                style={{ marginLeft: 1 }}
-              />
-            </View>
-          </View>
-        </View>
-      </Animated.View>
-    </TouchableOpacity>
-  );
-}
-
-// ─── Featured Card (full-width, latest podcast) ────────────────────
-
-function FeaturedCard({
-  item,
-  onPress,
-}: {
-  item: Podcast;
-  onPress: () => void;
-}) {
-  const scale = useRef(new Animated.Value(1)).current;
-
-  const pressIn = () =>
-    Animated.spring(scale, { toValue: 0.98, useNativeDriver: true }).start();
-  const pressOut = () =>
-    Animated.spring(scale, {
-      toValue: 1,
-      friction: 5,
-      useNativeDriver: true,
-    }).start();
-
-  return (
-    <TouchableOpacity
-      activeOpacity={1}
-      onPressIn={pressIn}
-      onPressOut={pressOut}
-      onPress={onPress}
-    >
-      <Animated.View
-        style={{ transform: [{ scale }] }}
-        className="rounded-2xl overflow-hidden mb-6"
-      >
-        {/* Artwork */}
-        <View
-          style={{
-            height: 180,
-            backgroundColor: "#0a0a0a",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: 20,
-            flexDirection: "row",
-          }}
-        >
-          {/* Text content left */}
-          <View style={{ flex: 1, paddingRight: 16 }}>
-            <View
-              style={{
-                backgroundColor: "rgba(255,255,255,0.12)",
-                alignSelf: "flex-start",
-                paddingHorizontal: 8,
-                paddingVertical: 3,
-                borderRadius: 20,
-                marginBottom: 10,
-              }}
-            >
-              <Text
-                style={{
-                  color: "rgba(255,255,255,0.7)",
-                  fontSize: 9,
-                  fontWeight: "700",
-                  letterSpacing: 1.2,
-                }}
-              >
-                LATEST
-              </Text>
-            </View>
-            <Text
-              style={{
-                color: "#ffffff",
-                fontSize: 16,
-                fontWeight: "800",
-                lineHeight: 22,
-              }}
-              numberOfLines={3}
-            >
-              {cleanFilename(item.original_filename)}
-            </Text>
-            <Text
-              style={{
-                color: "rgba(255,255,255,0.45)",
-                fontSize: 11,
-                marginTop: 8,
-                fontWeight: "500",
-              }}
-            >
-              {timeAgo(item.created_at)} • AI Podcast
-            </Text>
-          </View>
-
-          {/* Large play button right */}
-          <View
-            style={{
-              width: 52,
-              height: 52,
-              borderRadius: 26,
-              borderWidth: 1.5,
-              borderColor: "rgba(255,255,255,0.3)",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Ionicons
-              name="play"
-              size={22}
-              color="#ffffff"
-              style={{ marginLeft: 2 }}
-            />
-          </View>
-        </View>
-
-        {/* Bottom strip */}
-        <View
-          style={{
-            backgroundColor: "#f5f5f5",
-            paddingHorizontal: 16,
-            paddingVertical: 10,
-            flexDirection: "row",
-            alignItems: "center",
-          }}
-        >
-          <Ionicons name="headset-outline" size={13} color="#8a8a8a" />
-          <Text
-            style={{
-              color: "#8a8a8a",
-              fontSize: 11,
-              marginLeft: 5,
-              fontWeight: "600",
-            }}
-          >
-            Alex & Jamie · AI Study Podcast
-          </Text>
-        </View>
-      </Animated.View>
-    </TouchableOpacity>
-  );
-}
-
-// ─── Filter Tabs ──────────────────────────────────────────────────────
-
-function FilterTabs({
-  active,
-  onChange,
-}: {
-  active: FilterTab;
-  onChange: (t: FilterTab) => void;
-}) {
-  const tabs: { key: FilterTab; label: string }[] = [
-    { key: "all", label: "All" },
-    { key: "recent", label: "Recent" },
-    { key: "oldest", label: "Oldest" },
-  ];
-
-  return (
-    <View className="flex-row mb-6">
-      {tabs.map((t) => (
-        <TouchableOpacity
-          key={t.key}
-          onPress={() => onChange(t.key)}
-          activeOpacity={0.7}
-          style={{ marginRight: 8 }}
-        >
-          <View
-            style={{
-              paddingHorizontal: 16,
-              paddingVertical: 7,
-              borderRadius: 20,
-              backgroundColor: active === t.key ? "#0a0a0a" : "transparent",
-              borderWidth: 1,
-              borderColor: active === t.key ? "#0a0a0a" : "#d0d0d0",
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 13,
-                fontWeight: "600",
-                color: active === t.key ? "#ffffff" : "#8a8a8a",
-                letterSpacing: 0.2,
-              }}
-            >
-              {t.label}
-            </Text>
-          </View>
-        </TouchableOpacity>
-      ))}
+    <View style={{
+      width: size, height: size, borderRadius: 14,
+      backgroundColor: C.goldDim,
+      alignItems: "center", justifyContent: "center",
+      borderWidth: 1, borderColor: "rgba(244,165,53,0.18)",
+    }}>
+      {/* subtle grid lines */}
+      <View style={{ position: "absolute", top: 0, bottom: 0, left: size / 2 - 0.5, width: 1, backgroundColor: "rgba(244,165,53,0.08)" }} />
+      <View style={{ position: "absolute", left: 0, right: 0, top: size / 2 - 0.5, height: 1, backgroundColor: "rgba(244,165,53,0.08)" }} />
+      <Text style={{ fontSize: size * 0.28, fontWeight: "800", color: C.gold, letterSpacing: 1 }}>
+        {label}
+      </Text>
     </View>
   );
 }
 
-// ─── Empty State ──────────────────────────────────────────────────────
+// ── Hero Card (horizontal scroll, big) ────────────────────────────────
+const HERO_W = SW - 80;
+function HeroCard({ item, onPress }: { item: Podcast; onPress(): void }) {
+  const scale = useRef(new Animated.Value(1)).current;
+  return (
+    <TouchableOpacity activeOpacity={1}
+      onPressIn={() => Animated.spring(scale, { toValue: 0.97, useNativeDriver: true }).start()}
+      onPressOut={() => Animated.spring(scale, { toValue: 1, friction: 5, useNativeDriver: true }).start()}
+      onPress={onPress}
+    >
+      <Animated.View style={{
+        transform: [{ scale }], width: HERO_W, marginRight: 14,
+        backgroundColor: C.surface, borderRadius: 20,
+        borderWidth: 1, borderColor: C.rim, overflow: "hidden",
+      }}>
+        {/* Artwork top */}
+        <View style={{ padding: 16, paddingBottom: 12 }}>
+          <Artwork name={item.original_filename} size={HERO_W - 32} />
+        </View>
+        {/* Info bottom */}
+        <View style={{ paddingHorizontal: 16, paddingBottom: 16 }}>
+          <Text style={{ fontSize: 14, fontWeight: "700", color: C.cream, lineHeight: 19 }} numberOfLines={2}>
+            {clean(item.original_filename)}
+          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 10 }}>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: C.gold, marginRight: 6 }} />
+              <Text style={{ fontSize: 11, color: C.creamDim, fontWeight: "500" }}>{timeAgo(item.created_at)}</Text>
+            </View>
+            <View style={{
+              width: 34, height: 34, borderRadius: 17,
+              backgroundColor: C.gold, alignItems: "center", justifyContent: "center",
+            }}>
+              <Ionicons name="play" size={14} color={C.base} style={{ marginLeft: 2 }} />
+            </View>
+          </View>
+        </View>
+      </Animated.View>
+    </TouchableOpacity>
+  );
+}
 
+// ── List Row Card ─────────────────────────────────────────────────────
+function RowCard({ item, index, onPress }: { item: Podcast; index: number; onPress(): void }) {
+  const scale = useRef(new Animated.Value(1)).current;
+  return (
+    <TouchableOpacity activeOpacity={1}
+      onPressIn={() => Animated.spring(scale, { toValue: 0.985, useNativeDriver: true }).start()}
+      onPressOut={() => Animated.spring(scale, { toValue: 1, friction: 5, useNativeDriver: true }).start()}
+      onPress={onPress}
+    >
+      <Animated.View style={{
+        transform: [{ scale }],
+        flexDirection: "row", alignItems: "center",
+        backgroundColor: C.surface, borderRadius: 16,
+        borderWidth: 1, borderColor: C.rim,
+        padding: 12, marginBottom: 10,
+      }}>
+        {/* Index number */}
+        <Text style={{ width: 28, fontSize: 12, fontWeight: "700", color: C.creamFaint, textAlign: "center" }}>
+          {String(index + 1).padStart(2, "0")}
+        </Text>
+
+        {/* Artwork */}
+        <Artwork name={item.original_filename} size={48} />
+
+        {/* Text */}
+        <View style={{ flex: 1, marginLeft: 12, marginRight: 10 }}>
+          <Text style={{ fontSize: 14, fontWeight: "600", color: C.cream, lineHeight: 19 }} numberOfLines={2}>
+            {clean(item.original_filename)}
+          </Text>
+          <Text style={{ fontSize: 11, color: C.creamFaint, marginTop: 3, fontWeight: "500" }}>
+            {timeAgo(item.created_at)} · AI Podcast
+          </Text>
+        </View>
+
+        {/* Play */}
+        <View style={{
+          width: 32, height: 32, borderRadius: 16,
+          borderWidth: 1.5, borderColor: C.gold,
+          alignItems: "center", justifyContent: "center",
+        }}>
+          <Ionicons name="play" size={12} color={C.gold} style={{ marginLeft: 1 }} />
+        </View>
+      </Animated.View>
+    </TouchableOpacity>
+  );
+}
+
+// ── Empty State ───────────────────────────────────────────────────────
 function EmptyState() {
-  const translateY = useRef(new Animated.Value(24)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
-
+  const op = useRef(new Animated.Value(0)).current;
+  const ty = useRef(new Animated.Value(20)).current;
   useEffect(() => {
     Animated.parallel([
-      Animated.spring(translateY, {
-        toValue: 0,
-        friction: 6,
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacity, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }),
+      Animated.timing(op, { toValue: 1, duration: 600, useNativeDriver: true }),
+      Animated.spring(ty, { toValue: 0, friction: 7, useNativeDriver: true }),
     ]).start();
-  }, [translateY, opacity]);
-
+  }, []);
   return (
-    <Animated.View
-      style={{ transform: [{ translateY }], opacity }}
-      className="flex-1 items-center justify-center px-8"
-    >
-      {/* Big typographic "0" */}
-      <Text
-        style={{
-          fontSize: 120,
-          fontWeight: "900",
-          color: "#f0f0f0",
-          lineHeight: 130,
-          letterSpacing: -4,
-        }}
-      >
-        0
+    <Animated.View style={{ flex: 1, alignItems: "center", justifyContent: "center", opacity: op, transform: [{ translateY: ty }], paddingHorizontal: 40 }}>
+      <View style={{ width: 80, height: 80, borderRadius: 24, backgroundColor: C.goldDim, alignItems: "center", justifyContent: "center", marginBottom: 20, borderWidth: 1, borderColor: "rgba(244,165,53,0.2)" }}>
+        <Ionicons name="headset-outline" size={36} color={C.gold} />
+      </View>
+      <Text style={{ fontSize: 22, fontWeight: "800", color: C.cream, letterSpacing: -0.5, marginBottom: 8, textAlign: "center" }}>
+        No podcasts yet
       </Text>
-      <Text
-        style={{
-          fontSize: 20,
-          fontWeight: "800",
-          color: "#0a0a0a",
-          marginTop: 8,
-          marginBottom: 8,
-          letterSpacing: -0.5,
-        }}
-      >
-        No podcasts yet.
+      <Text style={{ fontSize: 14, color: C.creamFaint, textAlign: "center", lineHeight: 21, marginBottom: 32 }}>
+        Upload any PDF and Poddy turns it into a two-host conversational podcast
       </Text>
-      <Text
-        style={{
-          fontSize: 14,
-          color: "#8a8a8a",
-          textAlign: "center",
-          lineHeight: 20,
-          marginBottom: 32,
-        }}
-      >
-        Upload a PDF and Poddy turns it{"\n"}into a conversational podcast.
-      </Text>
-
-      <TouchableOpacity
-        onPress={() => router.navigate("/(tabs)/upload")}
-        activeOpacity={0.85}
-      >
-        <View
-          style={{
-            backgroundColor: "#0a0a0a",
-            paddingHorizontal: 28,
-            paddingVertical: 14,
-            borderRadius: 14,
-            flexDirection: "row",
-            alignItems: "center",
-          }}
-        >
-          <Ionicons name="arrow-up-circle-outline" size={18} color="#fff" />
-          <Text
-            style={{
-              color: "#fff",
-              fontWeight: "700",
-              fontSize: 15,
-              marginLeft: 8,
-            }}
-          >
-            Upload PDF
-          </Text>
+      <TouchableOpacity onPress={() => router.navigate("/(tabs)/upload")} activeOpacity={0.8}>
+        <View style={{ backgroundColor: C.gold, paddingHorizontal: 28, paddingVertical: 14, borderRadius: 14, flexDirection: "row", alignItems: "center" }}>
+          <Ionicons name="cloud-upload-outline" size={18} color={C.base} />
+          <Text style={{ color: C.base, fontWeight: "800", fontSize: 15, marginLeft: 8 }}>Upload PDF</Text>
         </View>
       </TouchableOpacity>
     </Animated.View>
   );
 }
 
-// ─── FAB ─────────────────────────────────────────────────────────────
-
-function FAB({ onPress }: { onPress: () => void }) {
+// ── FAB ───────────────────────────────────────────────────────────────
+function FAB({ onPress }: { onPress(): void }) {
   const scale = useRef(new Animated.Value(1)).current;
-
-  const pressIn = () =>
-    Animated.spring(scale, { toValue: 0.88, useNativeDriver: true }).start();
-  const pressOut = () =>
-    Animated.spring(scale, {
-      toValue: 1,
-      friction: 4,
-      tension: 200,
-      useNativeDriver: true,
-    }).start();
-
   return (
-    <TouchableOpacity
-      activeOpacity={1}
-      onPressIn={pressIn}
-      onPressOut={pressOut}
+    <TouchableOpacity activeOpacity={1}
+      onPressIn={() => Animated.spring(scale, { toValue: 0.88, useNativeDriver: true }).start()}
+      onPressOut={() => Animated.spring(scale, { toValue: 1, friction: 4, tension: 200, useNativeDriver: true }).start()}
       onPress={onPress}
       style={{ position: "absolute", bottom: 24, right: 20, zIndex: 50 }}
     >
-      <Animated.View
-        style={[
-          {
-            transform: [{ scale }],
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 6 },
-            shadowOpacity: 0.18,
-            shadowRadius: 16,
-            elevation: 10,
-          },
-        ]}
-      >
-        <View
-          style={{
-            width: 56,
-            height: 56,
-            borderRadius: 28,
-            backgroundColor: "#0a0a0a",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Ionicons name="add" size={26} color="#ffffff" />
-        </View>
+      <Animated.View style={{
+        transform: [{ scale }],
+        width: 56, height: 56, borderRadius: 28,
+        backgroundColor: C.gold,
+        alignItems: "center", justifyContent: "center",
+        shadowColor: C.gold, shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.4, shadowRadius: 14, elevation: 10,
+      }}>
+        <Ionicons name="add" size={28} color={C.base} />
       </Animated.View>
     </TouchableOpacity>
   );
 }
 
-// ─── Main Screen ──────────────────────────────────────────────────────
-
+// ── Main Screen ───────────────────────────────────────────────────────
 export default function HomeScreen() {
   const [podcasts, setPodcasts] = useState<Podcast[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [filter, setFilter] = useState<FilterTab>("all");
 
   const loadPodcasts = useCallback(async () => {
     try {
-      // TODO: Replace with real API call
+      // TODO: swap mock for real API
       // const token = await getToken();
-      // const res = await fetch(`${API_BASE}/api/podcasts`, {
-      //   headers: { Authorization: `Bearer ${token}` },
-      // });
+      // const res = await fetch(`${API_BASE}/api/podcasts`, { headers: { Authorization: `Bearer ${token}` } });
       // const data = await res.json();
-      // setPodcasts(data.filter((p: Podcast) => p.status === 'done'));
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setPodcasts(MOCK_PODCASTS.filter((p) => p.status === "done"));
-    } catch (err) {
-      console.error("Failed to load podcasts:", err);
+      // setPodcasts(data.filter((p: Podcast) => p.status === "done"));
+      await new Promise((r) => setTimeout(r, 1000));
+      setPodcasts(MOCK.filter((p) => p.status === "done"));
+    } catch (e) {
+      console.error(e);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   }, []);
 
-  useEffect(() => {
-    loadPodcasts();
-  }, [loadPodcasts]);
+  useEffect(() => { loadPodcasts(); }, [loadPodcasts]);
+  const onRefresh = useCallback(() => { setRefreshing(true); loadPodcasts(); }, [loadPodcasts]);
+  const goTo = (p: Podcast) => router.push({ pathname: "/player/[id]", params: { id: p.id, filename: p.original_filename } });
 
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    loadPodcasts();
-  }, [loadPodcasts]);
+  const recent = useMemo(() => [...podcasts].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 4), [podcasts]);
+  const all = useMemo(() => [...podcasts].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()), [podcasts]);
 
-  const handlePodcastPress = (podcast: Podcast) => {
-    router.push({
-      pathname: "/player/[id]",
-      params: { id: podcast.id, filename: podcast.original_filename },
-    });
-  };
-
-  // Sorted list based on filter
-  const filteredPodcasts = useMemo(() => {
-    const sorted = [...podcasts];
-    if (filter === "recent") {
-      sorted.sort(
-        (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-    } else if (filter === "oldest") {
-      sorted.sort(
-        (a, b) =>
-          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-      );
-    }
-    return sorted;
-  }, [podcasts, filter]);
-
-  // Featured = most recent
-  const featured = filteredPodcasts[0];
-  // Grid = rest
-  const gridItems = filteredPodcasts.slice(1);
-
-  // Build pairs for the 2-col grid
-  const gridRows: Podcast[][] = [];
-  for (let i = 0; i < gridItems.length; i += 2) {
-    gridRows.push(gridItems.slice(i, i + 2));
-  }
-
-  // ─── Render ──────────────────────────────────────────────────────
-
+  // ── Render ────────────────────────────────────────────────────────
   return (
-    <SafeAreaView className="flex-1 bg-paper" edges={["top"]}>
-      {loading ? (
-        // ── SKELETON ──
-        <ScrollView
-          className="flex-1"
-          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 40 }}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Header skeleton */}
-          <View className="mb-6">
-            <View
-              style={{ height: 42, width: 160, backgroundColor: "#e8e8e8" }}
-              className="rounded-lg mb-2"
-            />
-            <View
-              style={{ height: 14, width: 220, backgroundColor: "#f0f0f0" }}
-              className="rounded"
-            />
-          </View>
-          {/* Divider */}
-          <View style={{ height: 1, backgroundColor: "#e8e8e8" }} className="mb-5" />
-          {/* Filter skeleton */}
-          <View className="flex-row mb-6">
-            {[60, 70, 65].map((w, i) => (
-              <View
-                key={i}
-                style={{
-                  width: w,
-                  height: 34,
-                  backgroundColor: "#e8e8e8",
-                  borderRadius: 20,
-                  marginRight: 8,
-                }}
-              />
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.base }} edges={["top"]}>
+
+      {/* ── LOADING ── */}
+      {loading && (
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+          <Shimmer w={120} h={14} radius={6} />
+          <View style={{ marginTop: 6, marginBottom: 28 }}><Shimmer w={180} h={32} radius={8} /></View>
+          {/* Hero skeleton */}
+          <View style={{ marginBottom: 6 }}><Shimmer w="100%" h={14} radius={6} /></View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 28 }}>
+            {[0, 1].map((i) => (
+              <View key={i} style={{ width: HERO_W, marginRight: 14, borderRadius: 20, overflow: "hidden" }}>
+                <Shimmer w={HERO_W} h={HERO_W + 80} radius={20} />
+              </View>
             ))}
-          </View>
-          {/* Featured skeleton */}
-          <SkeletonCard wide />
-          {/* Grid skeleton */}
-          <View className="flex-row justify-between">
-            <SkeletonCard />
-            <SkeletonCard />
-          </View>
+          </ScrollView>
+          {/* Row skeletons */}
+          {[0, 1, 2].map((i) => (
+            <View key={i} style={{ flexDirection: "row", alignItems: "center", marginBottom: 10, backgroundColor: C.surface, borderRadius: 16, padding: 12 }}>
+              <Shimmer w={28} h={12} radius={4} />
+              <View style={{ marginLeft: 8 }}><Shimmer w={48} h={48} radius={14} /></View>
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                <Shimmer w="80%" h={13} radius={5} />
+                <View style={{ marginTop: 6 }}><Shimmer w="50%" h={10} radius={4} /></View>
+              </View>
+            </View>
+          ))}
         </ScrollView>
-      ) : podcasts.length === 0 ? (
-        // ── EMPTY STATE ──
+      )}
+
+      {/* ── EMPTY ── */}
+      {!loading && podcasts.length === 0 && (
         <>
-          <View className="px-5 pt-4">
-            <Text
-              style={{
-                fontSize: 38,
-                fontWeight: "900",
-                color: "#0a0a0a",
-                letterSpacing: -1.5,
-              }}
-            >
-              PODDY
+          <View style={{ paddingHorizontal: 20, paddingTop: 20 }}>
+            <Text style={{ fontSize: 12, fontWeight: "600", color: C.creamFaint, letterSpacing: 1.5, textTransform: "uppercase" }}>
+              {greeting()}
             </Text>
-            <Text style={{ fontSize: 13, color: "#8a8a8a", marginTop: 2 }}>
-              Your study podcasts
+            <Text style={{ fontSize: 34, fontWeight: "900", color: C.cream, letterSpacing: -1, marginTop: 4 }}>
+              Library
             </Text>
           </View>
           <EmptyState />
         </>
-      ) : (
-        // ── CONTENT ──
+      )}
+
+      {/* ── CONTENT ── */}
+      {!loading && podcasts.length > 0 && (
         <>
           <ScrollView
-            className="flex-1"
-            contentContainerStyle={{
-              paddingHorizontal: 20,
-              paddingTop: 16,
-              paddingBottom: 100,
-            }}
             showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                tintColor="#0a0a0a"
-                colors={["#0a0a0a"]}
-              />
-            }
+            contentContainerStyle={{ paddingBottom: 100 }}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.gold} colors={[C.gold]} />}
           >
-            {/* ── MASTHEAD HEADER ── */}
-            <View className="mb-5">
-              <View className="flex-row items-start justify-between">
-                <View>
-                  <Text
-                    style={{
-                      fontSize: 42,
-                      fontWeight: "900",
-                      color: "#0a0a0a",
-                      letterSpacing: -2,
-                      lineHeight: 44,
-                    }}
-                  >
-                    PODDY
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: 13,
-                      color: "#8a8a8a",
-                      marginTop: 3,
-                      fontWeight: "500",
-                      letterSpacing: 0.2,
-                    }}
-                  >
-                    {podcasts.length} podcast
-                    {podcasts.length !== 1 ? "s" : ""} in your library
-                  </Text>
-                </View>
-
-                {/* Count badge */}
-                <View
-                  style={{
-                    marginTop: 4,
-                    width: 44,
-                    height: 44,
-                    borderRadius: 22,
-                    backgroundColor: "#0a0a0a",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: "#fff",
-                      fontSize: 16,
-                      fontWeight: "900",
-                    }}
-                  >
+            {/* ── HEADER ── */}
+            <View style={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 24 }}>
+              <Text style={{ fontSize: 12, fontWeight: "600", color: C.creamFaint, letterSpacing: 1.5, textTransform: "uppercase" }}>
+                {greeting()}
+              </Text>
+              <View style={{ flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", marginTop: 4 }}>
+                <Text style={{ fontSize: 38, fontWeight: "900", color: C.cream, letterSpacing: -1.5, lineHeight: 42 }}>
+                  Library
+                </Text>
+                <View style={{
+                  backgroundColor: C.goldDim, borderRadius: 12, borderWidth: 1,
+                  borderColor: "rgba(244,165,53,0.25)", paddingHorizontal: 12,
+                  paddingVertical: 6, flexDirection: "row", alignItems: "center", marginBottom: 4,
+                }}>
+                  <Ionicons name="musical-notes" size={12} color={C.gold} />
+                  <Text style={{ fontSize: 13, fontWeight: "700", color: C.gold, marginLeft: 5 }}>
                     {podcasts.length}
                   </Text>
                 </View>
               </View>
             </View>
 
-            {/* ── RULE ── */}
-            <View
-              style={{ height: 1, backgroundColor: "#0a0a0a" }}
-              className="mb-5"
-            />
+            {/* ── DIVIDER ── */}
+            <View style={{ height: 1, backgroundColor: C.rim, marginHorizontal: 20, marginBottom: 24 }} />
 
-            {/* ── FILTER TABS ── */}
-            <FilterTabs active={filter} onChange={setFilter} />
-
-            {/* ── FEATURED CARD ── */}
-            {featured && (
-              <FeaturedCard
-                item={featured}
-                onPress={() => handlePodcastPress(featured)}
-              />
-            )}
-
-            {/* ── SECTION LABEL ── */}
-            {gridItems.length > 0 && (
-              <View className="flex-row items-center justify-between mb-4">
-                <Text
-                  style={{
-                    fontSize: 11,
-                    fontWeight: "700",
-                    color: "#8a8a8a",
-                    letterSpacing: 1.5,
-                  }}
-                >
-                  ALL EPISODES
+            {/* ── RECENT HORIZONTAL CAROUSEL ── */}
+            <View style={{ marginBottom: 30 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, marginBottom: 14 }}>
+                <Text style={{ fontSize: 12, fontWeight: "700", color: C.creamFaint, letterSpacing: 1.5, textTransform: "uppercase" }}>
+                  Recently Added
                 </Text>
-                <View
-                  style={{
-                    flex: 1,
-                    height: 1,
-                    backgroundColor: "#e8e8e8",
-                    marginLeft: 12,
-                  }}
-                />
+                <Ionicons name="chevron-forward" size={14} color={C.creamFaint} />
               </View>
-            )}
+              <FlatList
+                data={recent}
+                keyExtractor={(item) => `hero-${item.id}`}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: 20 }}
+                renderItem={({ item }) => (
+                  <HeroCard item={item} onPress={() => goTo(item)} />
+                )}
+              />
+            </View>
 
-            {/* ── 2-COL GRID ── */}
-            {gridRows.map((row, rowIdx) => (
-              <View
-                key={rowIdx}
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                }}
-              >
-                {row.map((item) => (
-                  <GridCard
-                    key={item.id}
-                    item={item}
-                    onPress={() => handlePodcastPress(item)}
-                  />
-                ))}
-                {/* Spacer if odd row */}
-                {row.length === 1 && <View style={{ width: CARD_WIDTH }} />}
+            {/* ── ALL EPISODES LIST ── */}
+            <View style={{ paddingHorizontal: 20 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
+                <Text style={{ fontSize: 12, fontWeight: "700", color: C.creamFaint, letterSpacing: 1.5, textTransform: "uppercase" }}>
+                  All Episodes
+                </Text>
+                <View style={{ flex: 1, height: 1, backgroundColor: C.rim, marginLeft: 12 }} />
               </View>
-            ))}
+
+              {all.map((item, idx) => (
+                <RowCard key={item.id} item={item} index={idx} onPress={() => goTo(item)} />
+              ))}
+            </View>
           </ScrollView>
 
           {/* ── FAB ── */}

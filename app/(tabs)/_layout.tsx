@@ -8,21 +8,21 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "#ffffff",
-          borderTopColor: "#e8e8e8",
+          backgroundColor: "#161410",
+          borderTopColor: "#2E2C28",
           borderTopWidth: 1,
           height: Platform.OS === "ios" ? 88 : 65,
-          paddingBottom: Platform.OS === "ios" ? 30 : 10,
+          paddingBottom: Platform.OS === "ios" ? 28 : 10,
           paddingTop: 10,
           elevation: 0,
-          shadowOpacity: 0,
         },
-        tabBarActiveTintColor: "#0a0a0a",
-        tabBarInactiveTintColor: "#b0b0b0",
+        tabBarActiveTintColor: "#F4A535",
+        tabBarInactiveTintColor: "#6A6258",
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: "600",
-          letterSpacing: 0.5,
+          letterSpacing: 0.8,
+          textTransform: "uppercase",
         },
       }}
     >
@@ -33,18 +33,18 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, focused }) => (
             <View
               style={{
-                width: 32,
-                height: 32,
-                borderRadius: 10,
-                backgroundColor: focused ? "#0a0a0a" : "transparent",
+                width: 36,
+                height: 28,
+                borderRadius: 8,
+                backgroundColor: focused ? "#1E1A08" : "transparent",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
               <Ionicons
-                name={focused ? "library" : "library-outline"}
-                size={18}
-                color={focused ? "#ffffff" : color}
+                name={focused ? "headset" : "headset-outline"}
+                size={20}
+                color={color}
               />
             </View>
           ),
@@ -57,18 +57,18 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, focused }) => (
             <View
               style={{
-                width: 32,
-                height: 32,
-                borderRadius: 10,
-                backgroundColor: focused ? "#0a0a0a" : "transparent",
+                width: 36,
+                height: 28,
+                borderRadius: 8,
+                backgroundColor: focused ? "#1E1A08" : "transparent",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
               <Ionicons
-                name={focused ? "add-circle" : "add-circle-outline"}
-                size={18}
-                color={focused ? "#ffffff" : color}
+                name={focused ? "cloud-upload" : "cloud-upload-outline"}
+                size={20}
+                color={color}
               />
             </View>
           ),
