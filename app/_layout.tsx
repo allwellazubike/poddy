@@ -5,11 +5,11 @@ import "./global.css";
 export default function RootLayout() {
   return (
     <>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: "#080808" },
+          contentStyle: { backgroundColor: "#F6F6F9" },
           animation: "slide_from_right",
         }}
       >

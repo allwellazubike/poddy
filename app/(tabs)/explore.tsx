@@ -4,15 +4,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 
 const CATEGORIES = [
-  { name: "Computer Science", icon: "code-slash" as const, color: "#7C3AED" },
+  { name: "Computer Science", icon: "code-slash" as const, color: "#0D9488" },
   { name: "Biology", icon: "leaf" as const, color: "#059669" },
-  { name: "Psychology", icon: "brain" as const, color: "#DB2777" },
+  { name: "Psychology", icon: "brain" as const, color: "#E11D48" },
   { name: "Mathematics", icon: "calculator" as const, color: "#DC2626" },
   { name: "Chemistry", icon: "flask" as const, color: "#2563EB" },
   { name: "Law", icon: "book" as const, color: "#D97706" },
-  { name: "History", icon: "time" as const, color: "#8B5CF6" },
+  { name: "History", icon: "time" as const, color: "#EA580C" },
   { name: "Literature", icon: "document-text" as const, color: "#0891B2" },
-  { name: "Physics", icon: "planet" as const, color: "#EA580C" },
+  { name: "Physics", icon: "planet" as const, color: "#CA8A04" },
 ];
 
 export default function ExploreScreen() {
@@ -28,7 +28,7 @@ export default function ExploreScreen() {
         {/* Search bar placeholder */}
         <View className="mx-5 mb-6">
           <View className="flex-row items-center bg-poddy-surface border border-poddy-border rounded-xl px-4 py-3">
-            <Ionicons name="search" size={18} color="#555555" />
+            <Ionicons name="search" size={18} color="#9CA3AF" />
             <Text className="text-poddy-text-muted text-[14px] ml-3">Search podcasts...</Text>
           </View>
         </View>
@@ -50,7 +50,7 @@ export default function ExploreScreen() {
                   <View
                     style={{
                       width: 36, height: 36, borderRadius: 10,
-                      backgroundColor: cat.color + "18",
+                      backgroundColor: cat.color + "14",
                       alignItems: "center", justifyContent: "center", marginRight: 10,
                     }}
                   >

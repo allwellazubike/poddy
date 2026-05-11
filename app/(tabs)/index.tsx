@@ -124,16 +124,16 @@ const MOCK_DISCOVER: PublicPodcast[] = [
 // ─── Niche colors ────────────────────────────────────────────────────
 
 const NICHE_COLORS: Record<string, string> = {
-  "Computer Science": "#7C3AED",
+  "Computer Science": "#0D9488",
   Biology: "#059669",
   Law: "#D97706",
-  Psychology: "#DB2777",
+  Psychology: "#E11D48",
   Chemistry: "#2563EB",
   Mathematics: "#DC2626",
 };
 
 function getNicheColor(niche: string): string {
-  return NICHE_COLORS[niche] || "#555555";
+  return NICHE_COLORS[niche] || "#6B7280";
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────
@@ -170,7 +170,7 @@ function SkeletonPulse({ w, h, r = 8, mb = 0 }: { w: number | string; h: number;
     a.start();
     return () => a.stop();
   }, [op]);
-  return <Animated.View style={{ opacity: op, width: w as any, height: h, borderRadius: r, backgroundColor: "#1C1C1E", marginBottom: mb }} />;
+  return <Animated.View style={{ opacity: op, width: w as any, height: h, borderRadius: r, backgroundColor: "#E4E4E9", marginBottom: mb }} />;
 }
 
 // ─── Recent Card (Horizontal) ────────────────────────────────────────
@@ -186,7 +186,7 @@ function RecentCard({ item, onPress }: { item: Podcast; onPress: () => void }) {
       >
         {/* Thumbnail area */}
         <View className="w-full aspect-square bg-poddy-accent-soft items-center justify-center">
-          <Ionicons name="headset" size={28} color="#7C3AED" />
+          <Ionicons name="headset" size={28} color="#0D9488" />
         </View>
         {/* Info */}
         <View className="p-3">
@@ -210,7 +210,7 @@ function DiscoverRow({ item, onPress }: { item: PublicPodcast; onPress: () => vo
       <View className="flex-row items-center bg-poddy-surface border border-poddy-border rounded-xl px-4 py-3.5 mb-2">
         {/* Creator avatar */}
         <View
-          style={{ backgroundColor: nicheColor + "20", borderWidth: 1, borderColor: nicheColor + "40" }}
+          style={{ backgroundColor: nicheColor + "18", borderWidth: 1, borderColor: nicheColor + "30" }}
           className="w-10 h-10 rounded-full items-center justify-center mr-3"
         >
           <Text style={{ color: nicheColor, fontSize: 14, fontWeight: "700" }}>
@@ -226,7 +226,7 @@ function DiscoverRow({ item, onPress }: { item: PublicPodcast; onPress: () => vo
           <View className="flex-row items-center">
             <Text className="text-poddy-text-secondary text-[12px]">{item.creator}</Text>
             <View className="w-1 h-1 rounded-full bg-poddy-text-muted mx-1.5" />
-            <View style={{ backgroundColor: nicheColor + "18", borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1 }}>
+            <View style={{ backgroundColor: nicheColor + "14", borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1 }}>
               <Text style={{ color: nicheColor, fontSize: 10, fontWeight: "600" }}>{item.niche}</Text>
             </View>
             <View className="w-1 h-1 rounded-full bg-poddy-text-muted mx-1.5" />
@@ -236,7 +236,7 @@ function DiscoverRow({ item, onPress }: { item: PublicPodcast; onPress: () => vo
 
         {/* Stats + Play */}
         <View className="items-end">
-          <Ionicons name="play-circle" size={28} color="#7C3AED" />
+          <Ionicons name="play-circle" size={28} color="#0D9488" />
           <Text className="text-poddy-text-muted text-[10px] mt-1">
             {formatPlays(item.plays)} plays
           </Text>
@@ -304,7 +304,7 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 40 }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7C3AED" colors={["#7C3AED"]} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#0D9488" colors={["#0D9488"]} />
         }
       >
         {/* ── HEADER ── */}
@@ -315,7 +315,7 @@ export default function HomeScreen() {
             onPress={() => {/* TODO: navigate to profile */}}
             className="w-9 h-9 rounded-full bg-poddy-surface border border-poddy-border items-center justify-center"
           >
-            <Ionicons name="person" size={16} color="#888888" />
+            <Ionicons name="person" size={16} color="#6B7280" />
           </TouchableOpacity>
         </View>
 

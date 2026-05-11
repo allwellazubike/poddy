@@ -8,16 +8,16 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "#080808",
-          borderTopColor: "#222222",
+          backgroundColor: "#FFFFFF",
+          borderTopColor: "#E4E4E9",
           borderTopWidth: 1,
           height: Platform.OS === "ios" ? 88 : 65,
           paddingBottom: Platform.OS === "ios" ? 30 : 10,
           paddingTop: 8,
           elevation: 0,
         },
-        tabBarActiveTintColor: "#EEEEEE",
-        tabBarInactiveTintColor: "#555555",
+        tabBarActiveTintColor: "#0D9488",
+        tabBarInactiveTintColor: "#9CA3AF",
         tabBarLabelStyle: {
           fontSize: 10,
           fontWeight: "600",
@@ -58,16 +58,16 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, focused }) => (
             <View
               style={{
-                width: 36,
-                height: 36,
-                borderRadius: 12,
-                backgroundColor: focused ? "#7C3AED" : "#1C1C1E",
+                width: 28,
+                height: 28,
+                borderRadius: 10,
+                backgroundColor: focused ? "#0D9488" : "#F0F0F4",
                 alignItems: "center",
                 justifyContent: "center",
-                marginBottom: 2,
+                marginBottom: 1,
               }}
             >
-              <Ionicons name="add" size={22} color={focused ? "#fff" : "#888"} />
+              <Ionicons name="add" size={22} color={focused ? "#fff" : "#9CA3AF"} />
             </View>
           ),
         }}
