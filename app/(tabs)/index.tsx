@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { ScrollView, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useAuth } from "@clerk/clerk-expo";
+import { useAuth } from "@/utils/mock-auth";
 import { Colors } from "@/constants";
 import { Podcast } from "@/types/podcast";
 import { apiFetch } from "@/utils";

@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, router } from "expo-router";
-import { useAuth } from "@clerk/clerk-expo";
+import { useAuth } from "@/utils/mock-auth";
 import { Ionicons } from "@expo/vector-icons";
 import { Audio } from "expo-av";
 import { Colors } from "@/constants";
@@ -97,7 +97,14 @@ function AudioPlayer({ audioUrl }: { audioUrl: string }) {
     let mounted = true;
 
     async function loadSound() {
+      if (!audioUrl || !audioUrl.startsWith('http')) {
+        console.log("Audio URL is not ready yet:", audioUrl);
+        if (mounted) setIsLoading(false);
+        return;
+      }
+
       try {
+        console.log("Loading valid audio URL:", audioUrl);
         await Audio.setAudioModeAsync({
           playsInSilentModeIOS: true,
           staysActiveInBackground: true,

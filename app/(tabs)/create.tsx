@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "@clerk/clerk-expo";
+import { useAuth } from "@/utils/mock-auth";
 import { router } from "expo-router";
 import * as DocumentPicker from "expo-document-picker";
 import { Colors } from "@/constants";

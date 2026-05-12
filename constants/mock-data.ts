@@ -5,7 +5,7 @@ import { Category } from "@/types/podcast";
 export const CATEGORIES: Category[] = [
   { name: "Computer Science", icon: "code-slash", color: "#0D9488" },
   { name: "Biology", icon: "leaf", color: "#059669" },
-  { name: "Psychology", icon: "brain", color: "#E11D48" },
+  { name: "Psychology", icon: "hardware-chip-outline", color: "#E11D48" },
   { name: "Mathematics", icon: "calculator", color: "#DC2626" },
   { name: "Chemistry", icon: "flask", color: "#2563EB" },
   { name: "Law", icon: "book", color: "#D97706" },

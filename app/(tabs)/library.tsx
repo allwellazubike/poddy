@@ -7,7 +7,7 @@ import {
   Text,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useAuth } from "@clerk/clerk-expo";
+import { useAuth } from "@/utils/mock-auth";
 import { router } from "expo-router";
 import { Colors } from "@/constants";
 import { Podcast } from "@/types/podcast";
