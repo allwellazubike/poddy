@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { ScrollView, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Colors, MOCK_MY_PODCASTS, MOCK_DISCOVER } from "@/constants";
+import { useAuth } from "@clerk/clerk-expo";
+import { Colors } from "@/constants";
 import { Podcast } from "@/types/podcast";
-import { PublicPodcast } from "@/types/podcast";
+import { apiFetch } from "@/utils";
 import { ScreenHeader } from "@/components/ui";
 import {
   HomeSkeleton,
@@ -12,24 +13,31 @@ import {
 } from "@/components/home";
 
 export default function HomeScreen() {
+  const { getToken } = useAuth();
+
   const [myPodcasts, setMyPodcasts] = useState<Podcast[]>([]);
-  const [discover, setDiscover] = useState<PublicPodcast[]>([]);
+  const [discover, setDiscover] = useState<Podcast[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
-      // TODO: Replace with real API calls
-      await new Promise((r) => setTimeout(r, 800));
-      setMyPodcasts(MOCK_MY_PODCASTS.filter((p) => p.status === "done"));
-      setDiscover(MOCK_DISCOVER);
+      const token = await getToken();
+
+      const [mine, feed] = await Promise.all([
+        apiFetch<Podcast[]>("/", token),
+        apiFetch<Podcast[]>("/feed", token),
+      ]);
+
+      setMyPodcasts(mine.filter((p) => p.status === "done"));
+      setDiscover(feed);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to load home data:", err);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [getToken]);
 
   useEffect(() => {
     loadData();

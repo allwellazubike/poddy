@@ -1,2 +1,1 @@
-/** Base URL for the Poddy backend API. */
-export const API_BASE = "http://YOUR_BACKEND_IP:5000";
+export const API_BASE = 'http://172.20.10.5:5000/api/podcasts';
