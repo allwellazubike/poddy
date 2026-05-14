@@ -1,19 +1,19 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { ScrollView, RefreshControl } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useAuth } from "@/utils/mock-auth";
+import {
+  DiscoverSection,
+  HomeSkeleton,
+  RecentSection,
+} from "@/components/home";
+import { ScreenHeader } from "@/components/ui";
 import { Colors } from "@/constants";
 import { Podcast } from "@/types/podcast";
 import { apiFetch } from "@/utils";
-import { ScreenHeader } from "@/components/ui";
-import {
-  HomeSkeleton,
-  RecentSection,
-  DiscoverSection,
-} from "@/components/home";
+
+import React, { useCallback, useEffect, useState } from "react";
+import { RefreshControl, ScrollView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
-  const { getToken } = useAuth();
+
 
   const [myPodcasts, setMyPodcasts] = useState<Podcast[]>([]);
   const [discover, setDiscover] = useState<Podcast[]>([]);
@@ -22,11 +22,9 @@ export default function HomeScreen() {
 
   const loadData = useCallback(async () => {
     try {
-      const token = await getToken();
-
       const [mine, feed] = await Promise.all([
-        apiFetch<Podcast[]>("/", token),
-        apiFetch<Podcast[]>("/feed", token),
+        apiFetch<Podcast[]>("/"),
+        apiFetch<Podcast[]>("/feed"),
       ]);
 
       setMyPodcasts(mine.filter((p) => p.status === "done"));
@@ -37,7 +35,7 @@ export default function HomeScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [getToken]);
+  }, []);
 
   useEffect(() => {
     loadData();

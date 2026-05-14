@@ -1,24 +1,29 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
-  View,
-  FlatList,
-  RefreshControl,
-  TouchableOpacity,
-  Text,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useAuth } from "@/utils/mock-auth";
-import { router } from "expo-router";
+  EmptyState,
+  FilterPill,
+  ScreenHeader,
+  SkeletonPulse,
+} from "@/components/ui";
 import { Colors } from "@/constants";
 import { Podcast } from "@/types/podcast";
 import { apiFetch, cleanFilename, timeAgo } from "@/utils";
-import { ScreenHeader, FilterPill, EmptyState, SkeletonPulse } from "@/components/ui";
+
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  FlatList,
+  RefreshControl,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const FILTER_OPTIONS = ["All", "Done", "Processing"] as const;
 
 export default function LibraryScreen() {
-  const { getToken } = useAuth();
+
 
   const [podcasts, setPodcasts] = useState<Podcast[]>([]);
   const [activeFilter, setActiveFilter] = useState<string>("All");
@@ -27,8 +32,7 @@ export default function LibraryScreen() {
 
   const loadLibrary = useCallback(async () => {
     try {
-      const token = await getToken();
-      const data = await apiFetch<Podcast[]>("/", token);
+      const data = await apiFetch<Podcast[]>("/");
       setPodcasts(data);
     } catch (err) {
       console.error("Failed to load library:", err);
@@ -36,7 +40,7 @@ export default function LibraryScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [getToken]);
+  }, []);
 
   useEffect(() => {
     loadLibrary();
@@ -50,11 +54,10 @@ export default function LibraryScreen() {
   // Client-side filtering based on active pill
   const filtered = useMemo(() => {
     if (activeFilter === "All") return podcasts;
-    if (activeFilter === "Done") return podcasts.filter((p) => p.status === "done");
+    if (activeFilter === "Done")
+      return podcasts.filter((p) => p.status === "done");
     // "Processing" = any status that isn't "done" or "failed"
-    return podcasts.filter(
-      (p) => p.status !== "done" && p.status !== "failed"
-    );
+    return podcasts.filter((p) => p.status !== "done" && p.status !== "failed");
   }, [podcasts, activeFilter]);
 
   const handlePress = (podcast: Podcast) => {
@@ -183,7 +186,11 @@ export default function LibraryScreen() {
 
                   {/* Action */}
                   {isDone && (
-                    <Ionicons name="play-circle" size={28} color={Colors.accent} />
+                    <Ionicons
+                      name="play-circle"
+                      size={28}
+                      color={Colors.accent}
+                    />
                   )}
                 </View>
               </TouchableOpacity>

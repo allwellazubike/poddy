@@ -15,7 +15,7 @@ export const Colors = {
   textMuted: "#9CA3AF",
 } as const;
 
-/** Per-niche accent colors used for avatars, badges, and category cards. */
+/** per niche accent colors used for avatars, badges, and category cards. */
 export const NicheColors: Record<string, string> = {
   "Computer Science": "#0D9488",
   Biology: "#059669",

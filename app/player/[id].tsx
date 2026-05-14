@@ -1,20 +1,20 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ActivityIndicator,
-  Animated,
-  Easing,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useLocalSearchParams, router } from "expo-router";
-import { useAuth } from "@/utils/mock-auth";
-import { Ionicons } from "@expo/vector-icons";
-import { Audio } from "expo-av";
 import { Colors } from "@/constants";
 import { PodcastStatus } from "@/types/podcast";
 import { apiFetch } from "@/utils";
+
+import { Ionicons } from "@expo/vector-icons";
+import { Audio } from "expo-av";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Animated,
+  Easing,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 // ─── Status step labels ──────────────────────────────────────────────
 
@@ -29,7 +29,13 @@ const STATUS_LABELS: Record<string, { label: string; icon: string }> = {
 
 // ─── Processing Steps Progress ───────────────────────────────────────
 
-const STEP_ORDER = ["uploaded", "extracting", "writing", "synthesizing", "done"];
+const STEP_ORDER = [
+  "uploaded",
+  "extracting",
+  "writing",
+  "synthesizing",
+  "done",
+];
 
 function ProcessingSteps({ currentStatus }: { currentStatus: string }) {
   const currentIdx = STEP_ORDER.indexOf(currentStatus);
@@ -51,8 +57,8 @@ function ProcessingSteps({ currentStatus }: { currentStatus: string }) {
                 backgroundColor: isComplete
                   ? Colors.accent
                   : isCurrent
-                  ? Colors.accentSoft
-                  : Colors.border,
+                    ? Colors.accentSoft
+                    : Colors.border,
                 alignItems: "center",
                 justifyContent: "center",
                 marginRight: 12,
@@ -72,7 +78,10 @@ function ProcessingSteps({ currentStatus }: { currentStatus: string }) {
               style={{
                 fontSize: 13,
                 fontWeight: isCurrent ? "600" : "400",
-                color: isComplete || isCurrent ? Colors.textPrimary : Colors.textMuted,
+                color:
+                  isComplete || isCurrent
+                    ? Colors.textPrimary
+                    : Colors.textMuted,
               }}
             >
               {info.label}
@@ -97,7 +106,7 @@ function AudioPlayer({ audioUrl }: { audioUrl: string }) {
     let mounted = true;
 
     async function loadSound() {
-      if (!audioUrl || !audioUrl.startsWith('http')) {
+      if (!audioUrl || !audioUrl.startsWith("http")) {
         console.log("Audio URL is not ready yet:", audioUrl);
         if (mounted) setIsLoading(false);
         return;
@@ -118,7 +127,7 @@ function AudioPlayer({ audioUrl }: { audioUrl: string }) {
             setPosition(status.positionMillis);
             setDuration(status.durationMillis || 0);
             setIsPlaying(status.isPlaying);
-          }
+          },
         );
         sound.current = s;
         if (mounted) setIsLoading(false);
@@ -243,7 +252,11 @@ function AudioPlayer({ audioUrl }: { audioUrl: string }) {
           activeOpacity={0.6}
           style={{ marginLeft: 28 }}
         >
-          <Ionicons name="play-forward" size={28} color={Colors.textSecondary} />
+          <Ionicons
+            name="play-forward"
+            size={28}
+            color={Colors.textSecondary}
+          />
         </TouchableOpacity>
       </View>
     </View>
@@ -254,7 +267,6 @@ function AudioPlayer({ audioUrl }: { audioUrl: string }) {
 
 export default function PlayerScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getToken } = useAuth();
 
   const [status, setStatus] = useState<PodcastStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -277,8 +289,8 @@ export default function PlayerScreen() {
           duration: 1000,
           easing: Easing.inOut(Easing.ease),
           useNativeDriver: true,
-        })
-      ])
+        }),
+      ]),
     );
     pulse.start();
     return () => pulse.stop();
@@ -297,8 +309,7 @@ export default function PlayerScreen() {
   // Polling logic
   const pollStatus = useCallback(async () => {
     try {
-      const token = await getToken();
-      const data = await apiFetch<PodcastStatus>(`/${id}/status`, token);
+      const data = await apiFetch<PodcastStatus>(`/${id}/status`);
       setStatus(data);
 
       // Stop polling when done or failed
@@ -315,7 +326,7 @@ export default function PlayerScreen() {
         intervalRef.current = null;
       }
     }
-  }, [id, getToken]);
+  }, [id]);
 
   useEffect(() => {
     // Initial fetch

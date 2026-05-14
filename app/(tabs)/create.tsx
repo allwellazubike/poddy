@@ -1,31 +1,34 @@
-import React, { useState, useCallback } from "react";
+import { ScreenHeader } from "@/components/ui";
+import { CATEGORIES, Colors } from "@/constants";
+import { apiFetch } from "@/utils";
+
+import { Ionicons } from "@expo/vector-icons";
+import * as DocumentPicker from "expo-document-picker";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useCallback, useState } from "react";
 import {
-  View,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  ScrollView,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "@/utils/mock-auth";
-import { useLocalSearchParams, router } from "expo-router";
-import * as DocumentPicker from "expo-document-picker";
-import { Colors, CATEGORIES } from "@/constants";
-import { apiFetch } from "@/utils";
-import { ScreenHeader } from "@/components/ui";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export default function CreateScreen() {
-  const { getToken } = useAuth();
 
   const params = useLocalSearchParams<{ category?: string }>();
-  const initialCategory = params.category ? decodeURIComponent(params.category) : "General";
+  const initialCategory = params.category
+    ? decodeURIComponent(params.category)
+    : "General";
 
-  const [file, setFile] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
+  const [file, setFile] = useState<DocumentPicker.DocumentPickerAsset | null>(
+    null,
+  );
   const [customPrompt, setCustomPrompt] = useState("");
   const [isPublic, setIsPublic] = useState(false);
   const [category, setCategory] = useState(initialCategory);
@@ -44,10 +47,7 @@ export default function CreateScreen() {
 
       // Validate file size
       if (picked.size && picked.size > MAX_FILE_SIZE) {
-        Alert.alert(
-          "File Too Large",
-          "Please select a PDF under 5MB."
-        );
+        Alert.alert("File Too Large", "Please select a PDF under 5MB.");
         return;
       }
 
@@ -65,7 +65,6 @@ export default function CreateScreen() {
 
     setSubmitting(true);
     try {
-      const token = await getToken();
 
       const formData = new FormData();
       formData.append("pdf", {
@@ -77,14 +76,10 @@ export default function CreateScreen() {
       formData.append("isPublic", isPublic ? "true" : "false");
       formData.append("category", isPublic ? category : "");
 
-      const res = await apiFetch<{ id: string }>(
-        "/upload",
-        token,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const res = await apiFetch<{ id: string }>("/upload", {
+        method: "POST",
+        body: formData,
+      });
 
       // Reset form
       setFile(null);
@@ -102,7 +97,7 @@ export default function CreateScreen() {
     } finally {
       setSubmitting(false);
     }
-  }, [file, customPrompt, isPublic, getToken]);
+  }, [file, customPrompt, isPublic]);
 
   return (
     <SafeAreaView className="flex-1 bg-poddy-bg" edges={["top"]}>
@@ -218,8 +213,8 @@ export default function CreateScreen() {
             <Text className="text-poddy-text-secondary text-[13px] mb-3 ml-1">
               Select a category for your public podcast:
             </Text>
-            <ScrollView 
-              horizontal 
+            <ScrollView
+              horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ gap: 8 }}
             >
@@ -233,7 +228,9 @@ export default function CreateScreen() {
                     style={{
                       flexDirection: "row",
                       alignItems: "center",
-                      backgroundColor: isSelected ? Colors.accent : Colors.surface,
+                      backgroundColor: isSelected
+                        ? Colors.accent
+                        : Colors.surface,
                       borderColor: isSelected ? Colors.accent : Colors.border,
                       borderWidth: 1,
                       paddingVertical: 8,
@@ -241,14 +238,14 @@ export default function CreateScreen() {
                       borderRadius: 20,
                     }}
                   >
-                    <Ionicons 
-                      name={cat.icon as any} 
-                      size={14} 
-                      color={isSelected ? "#fff" : Colors.textSecondary} 
+                    <Ionicons
+                      name={cat.icon as any}
+                      size={14}
+                      color={isSelected ? "#fff" : Colors.textSecondary}
                       style={{ marginRight: 6 }}
                     />
-                    <Text 
-                      style={{ 
+                    <Text
+                      style={{
                         color: isSelected ? "#fff" : Colors.textPrimary,
                         fontSize: 13,
                         fontWeight: isSelected ? "600" : "500",
@@ -269,7 +266,8 @@ export default function CreateScreen() {
           disabled={!file || submitting}
           activeOpacity={0.8}
           style={{
-            backgroundColor: !file || submitting ? Colors.border : Colors.accent,
+            backgroundColor:
+              !file || submitting ? Colors.border : Colors.accent,
             borderRadius: 12,
             paddingVertical: 16,
             alignItems: "center",

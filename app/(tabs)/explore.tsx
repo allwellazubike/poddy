@@ -30,7 +30,7 @@ export default function ExploreScreen() {
               <CategoryCard 
                 key={cat.name} 
                 category={cat} 
-                onPress={() => router.push(`/category/${encodeURIComponent(cat.name)}`)} 
+                onPress={() => router.push({ pathname: "/category/[name]" as any, params: { name: cat.name } })} 
               />
             ))}
           </View>

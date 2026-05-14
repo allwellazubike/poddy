@@ -1,17 +1,18 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useLocalSearchParams, router } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import { DiscoverRow } from "@/components/home";
 import { Colors } from "@/constants";
 import { Podcast } from "@/types/podcast";
 import { apiFetch } from "@/utils";
-import { PodcastRow } from "@/components/library";
+
+import { Ionicons } from "@expo/vector-icons";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function CategoryScreen() {
   const { name } = useLocalSearchParams<{ name: string }>();
   const decodedName = decodeURIComponent(name || "");
-  
+
   const [podcasts, setPodcasts] = useState<Podcast[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -55,7 +56,16 @@ export default function CategoryScreen() {
           </View>
         ) : podcasts.length > 0 ? (
           podcasts.map((podcast) => (
-            <PodcastRow key={podcast.id} podcast={podcast} />
+            <DiscoverRow
+              key={podcast.id}
+              item={podcast}
+              onPress={() =>
+                router.push({
+                  pathname: "/player/[id]" as any,
+                  params: { id: podcast.id },
+                })
+              }
+            />
           ))
         ) : (
           <View className="flex-1 justify-center items-center pb-20">
@@ -69,8 +79,14 @@ export default function CategoryScreen() {
               Be the first to create a podcast for the {decodedName} community!
             </Text>
             <TouchableOpacity
-              onPress={() => router.push({ pathname: "/(tabs)/create", params: { category: decodedName } })}
-              className="bg-poddy-accent px-8 py-4 rounded-xl flex-row items-center"
+              onPress={() =>
+                router.push({
+                  pathname: "/(tabs)/create",
+                  params: { category: decodedName },
+                })
+              }
+              className="px-8 py-4 rounded-xl flex-row items-center"
+              style={{ backgroundColor: Colors.accent }}
             >
               <Ionicons name="add" size={20} color="#fff" className="mr-2" />
               <Text className="text-white font-bold text-[16px] ml-2">
