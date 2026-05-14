@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CATEGORIES } from "@/constants";
+import { router } from "expo-router";
 import { ScreenHeader } from "@/components/ui";
 import { CategoryCard, SearchBar } from "@/components/explore";
 
@@ -26,7 +27,11 @@ export default function ExploreScreen() {
           </Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
             {CATEGORIES.map((cat) => (
-              <CategoryCard key={cat.name} category={cat} />
+              <CategoryCard 
+                key={cat.name} 
+                category={cat} 
+                onPress={() => router.push(`/category/${encodeURIComponent(cat.name)}`)} 
+              />
             ))}
           </View>
         </View>

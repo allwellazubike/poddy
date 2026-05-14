@@ -21,7 +21,7 @@ import { apiFetch } from "@/utils";
 const STATUS_LABELS: Record<string, { label: string; icon: string }> = {
   uploaded: { label: "Preparing your file…", icon: "cloud-upload" },
   extracting: { label: "Extracting text from PDF…", icon: "document-text" },
-  writing: { label: "AI is writing your script…", icon: "pencil" },
+  writing: { label: "Poddy is writing your script…", icon: "pencil" },
   synthesizing: { label: "Generating audio…", icon: "mic" },
   done: { label: "Your podcast is ready!", icon: "checkmark-circle" },
   failed: { label: "Something went wrong", icon: "alert-circle" },
@@ -260,25 +260,38 @@ export default function PlayerScreen() {
   const [error, setError] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Spinning animation for the loading icon
-  const spinAnim = useRef(new Animated.Value(0)).current;
+  // Pulsing animation for the loading icon
+  const animValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const spin = Animated.loop(
-      Animated.timing(spinAnim, {
-        toValue: 1,
-        duration: 2000,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      })
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(animValue, {
+          toValue: 1,
+          duration: 1000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(animValue, {
+          toValue: 0,
+          duration: 1000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        })
+      ])
     );
-    spin.start();
-    return () => spin.stop();
-  }, [spinAnim]);
+    pulse.start();
+    return () => pulse.stop();
+  }, [animValue]);
 
-  const spinInterpolation = spinAnim.interpolate({
+  const scaleInterpolation = animValue.interpolate({
     inputRange: [0, 1],
-    outputRange: ["0deg", "360deg"],
+    outputRange: [1, 1.15],
+  });
+
+  const opacityInterpolation = animValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.7, 1],
   });
 
   // Polling logic
@@ -451,7 +464,8 @@ export default function PlayerScreen() {
                 alignItems: "center",
                 justifyContent: "center",
                 marginBottom: 20,
-                transform: [{ rotate: spinInterpolation }],
+                transform: [{ scale: scaleInterpolation }],
+                opacity: opacityInterpolation,
               }}
             >
               <Ionicons

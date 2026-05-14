@@ -3,6 +3,7 @@ import { Category } from "@/types/podcast";
 // ─── Explore Categories ──────────────────────────────────────────────
 
 export const CATEGORIES: Category[] = [
+  { name: "General", icon: "apps-outline", color: "#6B7280" },
   { name: "Computer Science", icon: "code-slash", color: "#0D9488" },
   { name: "Biology", icon: "leaf", color: "#059669" },
   { name: "Psychology", icon: "hardware-chip-outline", color: "#E11D48" },
