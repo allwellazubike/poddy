@@ -92,8 +92,7 @@ function ProcessingSteps({ currentStatus }: { currentStatus: string }) {
   );
 }
 
-// ─── Audio Player ────────────────────────────────────────────────────
-
+// audio player
 function AudioPlayer({ audioUrl }: { audioUrl: string }) {
   const sound = useRef<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
