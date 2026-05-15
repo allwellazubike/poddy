@@ -26,7 +26,7 @@ const STATUS_LABELS: Record<string, { label: string; icon: string }> = {
   failed: { label: "Something went wrong", icon: "alert-circle" },
 };
 
-// ─── Processing Steps Progress ───────────────────────────────────────
+//  step progress 
 
 const STEP_ORDER = [
   "uploaded",
