@@ -33,7 +33,7 @@ export default function CategoryScreen() {
       }
     }
 
-    fetchCategory();
+    fetchCategory(); 
   }, [decodedName]);
 
   return (
@@ -48,7 +48,7 @@ export default function CategoryScreen() {
         </Text>
       </View>
 
-      {/* Content */}
+      {/* content */}
       <View className="flex-1 px-5 pt-6">
         {loading ? (
           <View className="flex-1 justify-center items-center">
