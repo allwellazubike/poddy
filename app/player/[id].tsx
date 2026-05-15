@@ -16,7 +16,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-// ─── Status step labels ──────────────────────────────────────────────
 
 const STATUS_LABELS: Record<string, { label: string; icon: string }> = {
   uploaded: { label: "Preparing your file…", icon: "cloud-upload" },
