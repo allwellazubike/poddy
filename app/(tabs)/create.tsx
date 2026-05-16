@@ -9,6 +9,8 @@ import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   Text,
   TextInput,
@@ -103,11 +105,15 @@ export default function CreateScreen() {
     <SafeAreaView className="flex-1 bg-poddy-bg" edges={["top"]}>
       <ScreenHeader title="Create" subtitle="Generate a podcast from any PDF" />
 
-      <ScrollView
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
         className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 32, paddingBottom: 40 }}
-        keyboardShouldPersistTaps="handled"
       >
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ paddingHorizontal: 32, paddingBottom: 40 }}
+          keyboardShouldPersistTaps="handled"
+        >
         {/* Upload area */}
         <TouchableOpacity
           activeOpacity={0.7}
@@ -282,6 +288,7 @@ export default function CreateScreen() {
           )}
         </TouchableOpacity>
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

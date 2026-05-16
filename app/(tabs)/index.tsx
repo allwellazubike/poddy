@@ -2,6 +2,7 @@ import {
   DiscoverSection,
   HomeSkeleton,
   RecentSection,
+  HomeEmptyState,
 } from "@/components/home";
 import { ScreenHeader } from "@/components/ui";
 import { Colors } from "@/constants";
@@ -50,7 +51,7 @@ export default function HomeScreen() {
     <SafeAreaView className="flex-1 bg-poddy-bg" edges={["top"]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: 40, flexGrow: 1 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -70,6 +71,8 @@ export default function HomeScreen() {
 
         {loading ? (
           <HomeSkeleton />
+        ) : myPodcasts.length === 0 && discover.length === 0 ? (
+          <HomeEmptyState />
         ) : (
           <>
             <RecentSection podcasts={myPodcasts} />
