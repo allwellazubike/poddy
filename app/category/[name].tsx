@@ -20,12 +20,8 @@ export default function CategoryScreen() {
     async function fetchCategory() {
       try {
         setLoading(true);
-        // We fetch the feed and try to filter by category.
-        // Currently the backend doesn't save category, so this will naturally be empty!
-        const feed: Podcast[] = await apiFetch("/podcasts/feed");
-        // Mock filtering logic if backend were to return category
-        // setPodcasts(feed.filter((p: any) => p.category === decodedName));
-        setPodcasts([]); // Forcing empty state to show the UI requested by the user
+        const feed: Podcast[] = await apiFetch(`/podcasts/feed?category=${encodeURIComponent(decodedName)}`);
+        setPodcasts(feed);
       } catch (err) {
         console.error(err);
       } finally {
