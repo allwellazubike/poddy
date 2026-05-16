@@ -12,6 +12,7 @@ import { apiFetch } from "@/utils";
 import React, { useCallback, useEffect, useState } from "react";
 import { RefreshControl, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
 
 export default function HomeScreen() {
 
@@ -65,7 +66,7 @@ export default function HomeScreen() {
           title="Poddy"
           showProfile
           onProfilePress={() => {
-            /* TODO: navigate to profile */
+            router.push("/profile");
           }}
         />
 

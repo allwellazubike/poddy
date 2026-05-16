@@ -18,6 +18,7 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="player/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="profile" options={{ presentation: "modal", headerShown: false, animation: "slide_from_bottom" }} />
       </Stack>
     </AuthProvider>
   );
