@@ -1,29 +1,39 @@
 /**
  * Central color tokens for the Poddy app.
- * These mirror the tailwind.config.js values so inline styles
- * can reference the same palette without magic strings.
+ * Design system: Graphite & Ivory (Minimalist Editorial).
+ * Strict monochrome, pure contrast.
  */
 export const Colors = {
-  bg: "#F6F6F9",
-  surface: "#FFFFFF",
-  surfaceHover: "#F0F0F4",
-  border: "#E4E4E9",
-  accent: "#0D9488",
-  accentSoft: "#CCFBF1",
-  textPrimary: "#1A1A2E",
-  textSecondary: "#6B7280",
-  textMuted: "#9CA3AF",
+  bg: "#000000",
+  surface: "#121212",
+  surfaceHover: "#18181B",
+  surfaceLow: "#09090B",
+  border: "#27272A",
+  borderLight: "#18181B",
+  
+  // Accents are basically high contrast text or white
+  accent: "#FFFFFF",
+  accentSoft: "#27272A", 
+  
+  textPrimary: "#FFFFFF",
+  textSecondary: "#A1A1AA",
+  textMuted: "#52525B",
 } as const;
 
-/** per niche accent colors used for avatars, badges, and category cards. */
+/** 
+ * Niche colors for Explore/Badges.
+ * In a mature minimal app, these should be muted or strictly gray.
+ * Let's use subtle, muted tones that look professional against black.
+ */
 export const NicheColors: Record<string, string> = {
-  "Computer Science": "#0D9488",
-  Biology: "#059669",
-  Law: "#D97706",
-  Psychology: "#E11D48",
-  Chemistry: "#2563EB",
-  Mathematics: "#DC2626",
-  History: "#EA580C",
-  Literature: "#0891B2",
-  Physics: "#CA8A04",
+  "Computer Science": "#3F3F46",
+  Biology: "#3F3F46",
+  Law: "#3F3F46",
+  Psychology: "#3F3F46",
+  Chemistry: "#3F3F46",
+  Mathematics: "#3F3F46",
+  History: "#3F3F46",
+  Literature: "#3F3F46",
+  Physics: "#3F3F46",
+  General: "#3F3F46",
 };

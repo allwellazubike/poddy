@@ -1,4 +1,3 @@
-import { ScreenHeader } from "@/components/ui";
 import { CATEGORIES, Colors } from "@/constants";
 import { apiFetch } from "@/utils";
 
@@ -14,7 +13,7 @@ import {
   ScrollView,
   Text,
   TextInput,
-  TouchableOpacity,
+  Pressable,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -22,15 +21,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export default function CreateScreen() {
-
   const params = useLocalSearchParams<{ category?: string }>();
   const initialCategory = params.category
     ? decodeURIComponent(params.category)
     : "General";
 
-  const [file, setFile] = useState<DocumentPicker.DocumentPickerAsset | null>(
-    null,
-  );
+  const [file, setFile] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
   const [customPrompt, setCustomPrompt] = useState("");
   const [isPublic, setIsPublic] = useState(false);
   const [category, setCategory] = useState(initialCategory);
@@ -44,15 +40,12 @@ export default function CreateScreen() {
       });
 
       if (result.canceled || !result.assets?.[0]) return;
-
       const picked = result.assets[0];
 
-      // Validate file size
       if (picked.size && picked.size > MAX_FILE_SIZE) {
         Alert.alert("File Too Large", "Please select a PDF under 5MB.");
         return;
       }
-
       setFile(picked);
     } catch (err) {
       console.error("File pick error:", err);
@@ -67,7 +60,6 @@ export default function CreateScreen() {
 
     setSubmitting(true);
     try {
-
       const formData = new FormData();
       formData.append("pdf", {
         uri: file.uri,
@@ -83,12 +75,10 @@ export default function CreateScreen() {
         body: formData,
       });
 
-      // Reset form
       setFile(null);
       setCustomPrompt("");
       setIsPublic(false);
 
-      // Navigate to player/polling screen
       router.push({
         // @ts-ignore
         pathname: "/player/[id]",
@@ -99,195 +89,235 @@ export default function CreateScreen() {
     } finally {
       setSubmitting(false);
     }
-  }, [file, customPrompt, isPublic]);
+  }, [file, customPrompt, isPublic, category]);
 
   return (
-    <SafeAreaView className="flex-1 bg-poddy-bg" edges={["top"]}>
-      <ScreenHeader title="Create" subtitle="Generate a podcast from any PDF" />
-
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        className="flex-1"
-      >
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={["top"]}>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
         <ScrollView
-          className="flex-1"
-          contentContainerStyle={{ paddingHorizontal: 32, paddingBottom: 40 }}
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 32, paddingBottom: 80 }}
           keyboardShouldPersistTaps="handled"
         >
-        {/* Upload area */}
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={handlePickFile}
-          disabled={submitting}
-        >
-          <View className="w-full rounded-2xl border-2 border-dashed border-poddy-border items-center justify-center py-16 mb-8">
-            <View className="w-16 h-16 rounded-2xl bg-poddy-accent-soft items-center justify-center mb-4">
-              <Ionicons
-                name={file ? "document" : "cloud-upload-outline"}
-                size={32}
-                color={Colors.accent}
-              />
-            </View>
-            {file ? (
-              <>
-                <Text
-                  className="text-poddy-text-primary text-[14px] font-semibold mb-1 px-4"
-                  numberOfLines={2}
-                  style={{ textAlign: "center" }}
-                >
-                  {file.name}
-                </Text>
-                <Text className="text-poddy-accent text-[12px] font-medium">
-                  Tap to change
-                </Text>
-              </>
-            ) : (
-              <>
-                <Text className="text-poddy-text-primary text-[16px] font-semibold mb-1">
-                  Tap to upload a PDF
-                </Text>
-                <Text className="text-poddy-text-muted text-[13px]">
-                  Max file size: 5MB
-                </Text>
-              </>
-            )}
-          </View>
-        </TouchableOpacity>
-
-        {/* Custom instructions */}
-        <View className="w-full bg-poddy-surface border border-poddy-border rounded-xl p-4 mb-6">
-          <Text className="text-poddy-text-secondary text-[13px] mb-2">
-            Custom instructions (optional)
-          </Text>
-          <TextInput
-            value={customPrompt}
-            onChangeText={setCustomPrompt}
-            placeholder="e.g. Focus on inheritance and polymorphism"
-            placeholderTextColor={Colors.textMuted}
-            multiline
-            numberOfLines={3}
-            className="text-poddy-text-primary text-[13px]"
-            style={{ padding: 0, textAlignVertical: "top", minHeight: 48 }}
-            editable={!submitting}
-          />
-        </View>
-
-        {/* Visibility toggle */}
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={() => setIsPublic((p) => !p)}
-          disabled={submitting}
-        >
-          <View className="w-full flex-row items-center justify-between bg-poddy-surface border border-poddy-border rounded-xl px-4 py-3 mb-4">
-            <View className="flex-row items-center">
-              <Ionicons
-                name={isPublic ? "globe" : "lock-closed-outline"}
-                size={18}
-                color={Colors.textSecondary}
-              />
-              <Text className="text-poddy-text-primary text-[14px] font-medium ml-3">
-                {isPublic ? "Public" : "Private"}
-              </Text>
-            </View>
-            {/* Toggle track */}
-            <View
+          {/* Header */}
+          <View style={{ marginBottom: 40 }}>
+            <Text
               style={{
-                width: 40,
-                height: 24,
-                borderRadius: 12,
-                backgroundColor: isPublic ? Colors.accent : Colors.border,
-                justifyContent: "center",
-                paddingHorizontal: 2,
+                fontFamily: "Inter_800ExtraBold",
+                fontSize: 40,
+                color: Colors.textPrimary,
+                letterSpacing: -1,
+                marginBottom: 8,
               }}
             >
-              <View
-                style={{
-                  width: 20,
-                  height: 20,
-                  borderRadius: 10,
-                  backgroundColor: "#fff",
-                  alignSelf: isPublic ? "flex-end" : "flex-start",
-                }}
-              />
-            </View>
-          </View>
-        </TouchableOpacity>
-
-        {/* Category selector (only shown if public) */}
-        {isPublic && (
-          <View className="mb-6">
-            <Text className="text-poddy-text-secondary text-[13px] mb-3 ml-1">
-              Select a category for your public podcast:
+              New Project
             </Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 8 }}
+            <Text
+              style={{
+                fontFamily: "Inter_400Regular",
+                fontSize: 16,
+                color: Colors.textSecondary,
+              }}
             >
-              {CATEGORIES.map((cat) => {
-                const isSelected = category === cat.name;
-                return (
-                  <TouchableOpacity
-                    key={cat.name}
-                    onPress={() => setCategory(cat.name)}
-                    activeOpacity={0.7}
+              Transform your document into a podcast.
+            </Text>
+          </View>
+
+          {/* File Picker */}
+          <View style={{ marginBottom: 32 }}>
+            <Text
+              style={{
+                fontFamily: "Inter_500Medium",
+                fontSize: 12,
+                color: Colors.textSecondary,
+                textTransform: "uppercase",
+                letterSpacing: 1,
+                marginBottom: 8,
+              }}
+            >
+              Document
+            </Text>
+            <Pressable
+              onPress={handlePickFile}
+              disabled={submitting}
+              style={({ pressed }) => ({
+                width: "100%",
+                padding: 24,
+                borderWidth: 1,
+                borderColor: file ? Colors.textPrimary : Colors.border,
+                borderStyle: file ? "solid" : "dashed",
+                alignItems: "center",
+                justifyContent: "center",
+                opacity: pressed ? 0.6 : 1,
+              })}
+            >
+              <Ionicons
+                name={file ? "document-text" : "document-attach-outline"}
+                size={32}
+                color={file ? Colors.textPrimary : Colors.textSecondary}
+                style={{ marginBottom: 12 }}
+              />
+              {file ? (
+                <>
+                  <Text
                     style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      backgroundColor: isSelected
-                        ? Colors.accent
-                        : Colors.surface,
-                      borderColor: isSelected ? Colors.accent : Colors.border,
-                      borderWidth: 1,
-                      paddingVertical: 8,
-                      paddingHorizontal: 12,
-                      borderRadius: 20,
+                      fontFamily: "Inter_600SemiBold",
+                      fontSize: 14,
+                      color: Colors.textPrimary,
+                      textAlign: "center",
+                      marginBottom: 4,
                     }}
+                    numberOfLines={1}
                   >
-                    <Ionicons
-                      name={cat.icon as any}
-                      size={14}
-                      color={isSelected ? "#fff" : Colors.textSecondary}
-                      style={{ marginRight: 6 }}
-                    />
-                    <Text
+                    {file.name}
+                  </Text>
+                  <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: Colors.textSecondary }}>
+                    Tap to change
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <Text style={{ fontFamily: "Inter_500Medium", fontSize: 14, color: Colors.textPrimary, marginBottom: 4 }}>
+                    Select a PDF
+                  </Text>
+                  <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: Colors.textSecondary }}>
+                    Max size: 5MB
+                  </Text>
+                </>
+              )}
+            </Pressable>
+          </View>
+
+          {/* Custom Prompt */}
+          <View style={{ marginBottom: 32 }}>
+            <Text
+              style={{
+                fontFamily: "Inter_500Medium",
+                fontSize: 12,
+                color: Colors.textSecondary,
+                textTransform: "uppercase",
+                letterSpacing: 1,
+                marginBottom: 8,
+              }}
+            >
+              Custom Instructions
+            </Text>
+            <TextInput
+              value={customPrompt}
+              onChangeText={setCustomPrompt}
+              placeholder="e.g. Focus on chapter 3, keep it casual..."
+              placeholderTextColor={Colors.textMuted}
+              multiline
+              style={{
+                fontFamily: "Inter_400Regular",
+                fontSize: 16,
+                color: Colors.textPrimary,
+                borderBottomWidth: 1,
+                borderBottomColor: Colors.border,
+                paddingVertical: 12,
+                minHeight: 48,
+              }}
+              editable={!submitting}
+            />
+          </View>
+
+          {/* Visibility Toggle */}
+          <View style={{ marginBottom: 32 }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <Text
+                style={{
+                  fontFamily: "Inter_500Medium",
+                  fontSize: 12,
+                  color: Colors.textSecondary,
+                  textTransform: "uppercase",
+                  letterSpacing: 1,
+                }}
+              >
+                Visibility
+              </Text>
+              <Pressable
+                onPress={() => setIsPublic(!isPublic)}
+                disabled={submitting}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 14, color: Colors.textPrimary }}>
+                  {isPublic ? "Public" : "Private"}
+                </Text>
+                <Ionicons name={isPublic ? "globe-outline" : "lock-closed-outline"} size={16} color={Colors.textPrimary} />
+              </Pressable>
+            </View>
+
+            {/* Category selection if public */}
+            {isPublic && (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+                {CATEGORIES.map((cat) => {
+                  const isSelected = category === cat.name;
+                  return (
+                    <Pressable
+                      key={cat.name}
+                      onPress={() => setCategory(cat.name)}
                       style={{
-                        color: isSelected ? "#fff" : Colors.textPrimary,
-                        fontSize: 13,
-                        fontWeight: isSelected ? "600" : "500",
+                        paddingVertical: 8,
+                        paddingHorizontal: 16,
+                        borderWidth: 1,
+                        borderColor: isSelected ? Colors.textPrimary : Colors.border,
+                        backgroundColor: isSelected ? Colors.textPrimary : "transparent",
+                        borderRadius: 20,
                       }}
                     >
-                      {cat.name}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
+                      <Text
+                        style={{
+                          fontFamily: "Inter_500Medium",
+                          fontSize: 13,
+                          color: isSelected ? Colors.bg : Colors.textPrimary,
+                        }}
+                      >
+                        {cat.name}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            )}
           </View>
-        )}
 
-        {/* Generate button */}
-        <TouchableOpacity
-          onPress={handleSubmit}
-          disabled={!file || submitting}
-          activeOpacity={0.8}
-          style={{
-            backgroundColor:
-              !file || submitting ? Colors.border : Colors.accent,
-            borderRadius: 12,
-            paddingVertical: 16,
-            alignItems: "center",
-          }}
-        >
-          {submitting ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text className="text-white text-[16px] font-bold">
-              Generate Podcast
-            </Text>
-          )}
-        </TouchableOpacity>
-      </ScrollView>
+          {/* Submit Button */}
+          <Pressable
+            onPress={handleSubmit}
+            disabled={!file || submitting}
+            style={({ pressed }) => ({
+              width: "100%",
+              height: 56,
+              backgroundColor: !file || submitting ? Colors.border : Colors.textPrimary,
+              borderRadius: 4,
+              alignItems: "center",
+              justifyContent: "center",
+              flexDirection: "row" as const,
+              opacity: pressed ? 0.8 : 1,
+              transform: [{ scale: pressed ? 0.98 : 1 }],
+              marginTop: 16,
+            })}
+          >
+            {submitting ? (
+              <ActivityIndicator color={Colors.bg} />
+            ) : (
+              <Text
+                style={{
+                  fontFamily: "Inter_600SemiBold",
+                  color: Colors.bg,
+                  fontSize: 16,
+                  letterSpacing: 0.5,
+                }}
+              >
+                Generate
+              </Text>
+            )}
+          </Pressable>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

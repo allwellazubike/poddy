@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { Platform, View } from "react-native";
+import { Platform } from "react-native";
 
 export default function TabsLayout() {
   return (
@@ -8,19 +8,19 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "#FFFFFF",
-          borderTopColor: "#E4E4E9",
+          backgroundColor: "#000000",
+          borderTopColor: "#27272A",
           borderTopWidth: 1,
           height: Platform.OS === "ios" ? 88 : 65,
           paddingBottom: Platform.OS === "ios" ? 30 : 10,
           paddingTop: 8,
           elevation: 0,
         },
-        tabBarActiveTintColor: "#0D9488",
-        tabBarInactiveTintColor: "#9CA3AF",
+        tabBarActiveTintColor: "#FFFFFF",
+        tabBarInactiveTintColor: "#52525B",
         tabBarLabelStyle: {
+          fontFamily: "Inter_600SemiBold",
           fontSize: 10,
-          fontWeight: "600",
           marginTop: 2,
         },
       }}
@@ -45,7 +45,7 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "compass" : "compass-outline"}
-              size={22}
+              size={24}
               color={color}
             />
           ),
@@ -56,19 +56,11 @@ export default function TabsLayout() {
         options={{
           title: "Create",
           tabBarIcon: ({ color, focused }) => (
-            <View
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 10,
-                backgroundColor: focused ? "#0D9488" : "#F0F0F4",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 1,
-              }}
-            >
-              <Ionicons name="add" size={22} color={focused ? "#fff" : "#9CA3AF"} />
-            </View>
+            <Ionicons
+              name={focused ? "add-circle" : "add-circle-outline"}
+              size={26}
+              color={color}
+            />
           ),
         }}
       />

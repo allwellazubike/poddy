@@ -1,10 +1,10 @@
 import {
   DiscoverSection,
   HomeSkeleton,
-  RecentSection,
+  LibrarySection,
   HomeEmptyState,
+  HomeHeader,
 } from "@/components/home";
-import { ScreenHeader } from "@/components/ui";
 import { Colors } from "@/constants";
 import { Podcast } from "@/types/podcast";
 import { apiFetch } from "@/utils";
@@ -12,11 +12,8 @@ import { apiFetch } from "@/utils";
 import React, { useCallback, useEffect, useState } from "react";
 import { RefreshControl, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
 
 export default function HomeScreen() {
-
-
   const [myPodcasts, setMyPodcasts] = useState<Podcast[]>([]);
   const [discover, setDiscover] = useState<Podcast[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,10 +23,10 @@ export default function HomeScreen() {
     try {
       const [mine, feed] = await Promise.all([
         apiFetch<Podcast[]>("/podcasts"),
-        apiFetch<Podcast[]>("/podcasts/feed"),
+        apiFetch<Podcast[]>("/podcasts/feed?random=true"),
       ]);
 
-      setMyPodcasts(mine.filter((p) => p.status === "done"));
+      setMyPodcasts(mine);
       setDiscover(feed);
     } catch (err) {
       console.error("Failed to load home data:", err);
@@ -49,10 +46,12 @@ export default function HomeScreen() {
   }, [loadData]);
 
   return (
-    <SafeAreaView className="flex-1 bg-poddy-bg" edges={["top"]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={["top"]}>
+      <HomeHeader />
+
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40, flexGrow: 1 }}
+        contentContainerStyle={{ paddingBottom: 40, flexGrow: 1, paddingTop: 24 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -62,21 +61,13 @@ export default function HomeScreen() {
           />
         }
       >
-        <ScreenHeader
-          title="Poddy"
-          showProfile
-          onProfilePress={() => {
-            router.push("/profile");
-          }}
-        />
-
         {loading ? (
           <HomeSkeleton />
         ) : myPodcasts.length === 0 && discover.length === 0 ? (
           <HomeEmptyState />
         ) : (
           <>
-            <RecentSection podcasts={myPodcasts} />
+            <LibrarySection podcasts={myPodcasts} />
             <DiscoverSection podcasts={discover} />
           </>
         )}

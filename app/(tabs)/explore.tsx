@@ -1,31 +1,60 @@
 import React from "react";
 import { View, Text, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { CATEGORIES } from "@/constants";
+import { CATEGORIES, Colors } from "@/constants";
 import { router } from "expo-router";
-import { ScreenHeader } from "@/components/ui";
 import { CategoryCard, SearchBar } from "@/components/explore";
 
 export default function ExploreScreen() {
   return (
-    <SafeAreaView className="flex-1 bg-poddy-bg" edges={["top"]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={["top"]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: 40, paddingHorizontal: 24, paddingTop: 32 }}
       >
-        <ScreenHeader title="Explore" subtitle="Browse podcasts by category" />
+        <View style={{ marginBottom: 40 }}>
+          <Text
+            style={{
+              fontFamily: "Inter_800ExtraBold",
+              fontSize: 40,
+              color: Colors.textPrimary,
+              letterSpacing: -1,
+              marginBottom: 8,
+            }}
+          >
+            Explore
+          </Text>
+          <Text
+            style={{
+              fontFamily: "Inter_400Regular",
+              fontSize: 16,
+              color: Colors.textSecondary,
+            }}
+          >
+            Browse podcasts by category.
+          </Text>
+        </View>
 
         {/* Search */}
-        <View className="mx-5 mb-6">
+        <View style={{ marginBottom: 40 }}>
           <SearchBar />
         </View>
 
         {/* Category grid */}
-        <View className="px-5">
-          <Text className="text-poddy-text-primary text-[16px] font-semibold mb-4">
+        <View>
+          <Text
+            style={{
+              fontFamily: "Inter_500Medium",
+              fontSize: 12,
+              color: Colors.textSecondary,
+              textTransform: "uppercase",
+              letterSpacing: 1,
+              marginBottom: 16,
+            }}
+          >
             Categories
           </Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
             {CATEGORIES.map((cat) => (
               <CategoryCard 
                 key={cat.name} 

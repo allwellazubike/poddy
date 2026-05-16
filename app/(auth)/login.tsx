@@ -1,5 +1,4 @@
 import { useAuth } from "@/context/AuthContext";
-
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useState } from "react";
@@ -8,36 +7,17 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-/** Auth-specific color palette — matches the Google Stitch design. */
-const AC = {
-  background: "#f8f9fa",
-  surface: "rgba(255, 255, 255, 0.85)",
-  surfaceLow: "#f3f4f5",
-  surfaceVariant: "#e1e3e4",
-  primary: "#4f46e5",
-  primaryDark: "#3525cd",
-  onPrimary: "#ffffff",
-  onBackground: "#191c1d",
-  onSurfaceVariant: "#464555",
-  outline: "#777587",
-  outlineVariant: "rgba(199, 196, 216, 0.5)",
-  primaryFixed: "#e2dfff",
-  primaryFixedDim: "#c3c0ff",
-  secondaryFixed: "#e9ddff",
-  tertiaryFixedDim: "rgba(78, 222, 163, 0.2)",
-};
+import { Colors } from "@/constants";
 
 export default function LoginScreen() {
   const { login } = useAuth();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -48,7 +28,6 @@ export default function LoginScreen() {
       Alert.alert("Missing Fields", "Please enter both email and password.");
       return;
     }
-
     setLoading(true);
     try {
       await login(email.trim(), password);
@@ -61,33 +40,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: AC.background }}>
-      {/* ── Decorative Blobs ────────────────────────────────── */}
-      <View
-        style={{
-          position: "absolute",
-          top: -80,
-          right: -80,
-          width: 320,
-          height: 320,
-          borderRadius: 160,
-          backgroundColor: AC.primaryFixed,
-          opacity: 0.4,
-        }}
-      />
-      <View
-        style={{
-          position: "absolute",
-          bottom: -100,
-          left: -100,
-          width: 380,
-          height: 380,
-          borderRadius: 190,
-          backgroundColor: AC.surfaceVariant,
-          opacity: 0.5,
-        }}
-      />
-
+    <View style={{ flex: 1, backgroundColor: Colors.bg }}>
       <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -97,337 +50,163 @@ export default function LoginScreen() {
             contentContainerStyle={{
               flexGrow: 1,
               justifyContent: "center",
-              paddingHorizontal: 20,
+              paddingHorizontal: 24,
             }}
             keyboardShouldPersistTaps="handled"
           >
-            {/* ── Glass Card ─────────────────────────────────── */}
-            <View
-              style={{
-                backgroundColor: AC.surface,
-                borderRadius: 24,
-                padding: 32,
-                borderWidth: 1,
-                borderColor: "rgba(225, 227, 228, 0.5)",
-                shadowColor: "#4f46e5",
-                shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: 0.06,
-                shadowRadius: 32,
-                elevation: 8,
-                alignItems: "center",
-              }}
-            >
-              {/* Logo */}
-              <View
-                style={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: 16,
-                  backgroundColor: AC.primaryFixed,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: 24,
-                  shadowColor: "#4f46e5",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.08,
-                  shadowRadius: 12,
-                  elevation: 3,
-                }}
-              >
-                <Ionicons name="headset" size={40} color={AC.primary} />
-              </View>
-
-              {/* Heading */}
+            {/* Header */}
+            <View style={{ marginBottom: 48 }}>
               <Text
                 style={{
-                  fontSize: 28,
-                  fontWeight: "700",
-                  color: AC.onBackground,
+                  fontFamily: "Inter_800ExtraBold",
+                  fontSize: 40,
+                  color: Colors.textPrimary,
+                  letterSpacing: -1,
                   marginBottom: 8,
-                  textAlign: "center",
                 }}
               >
-                Welcome Back
+                Sign In
               </Text>
               <Text
                 style={{
+                  fontFamily: "Inter_400Regular",
                   fontSize: 16,
-                  color: AC.onSurfaceVariant,
-                  marginBottom: 32,
-                  textAlign: "center",
+                  color: Colors.textSecondary,
+                  letterSpacing: 0,
                 }}
               >
-                Sign in to continue your podcast journey.
+                Welcome back to Poddy.
               </Text>
+            </View>
 
-              {/* ── Email Input ──────────────────────────────── */}
-              <View style={{ width: "100%", marginBottom: 16 }}>
-                <Text
+            {/* Email Input */}
+            <View style={{ marginBottom: 32 }}>
+              <Text
+                style={{
+                  fontFamily: "Inter_500Medium",
+                  fontSize: 12,
+                  color: Colors.textSecondary,
+                  textTransform: "uppercase",
+                  letterSpacing: 1,
+                  marginBottom: 8,
+                }}
+              >
+                Email
+              </Text>
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                placeholder="Enter your email"
+                placeholderTextColor={Colors.textMuted}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                style={{
+                  fontFamily: "Inter_500Medium",
+                  fontSize: 18,
+                  color: Colors.textPrimary,
+                  paddingVertical: 12,
+                  borderBottomWidth: 1,
+                  borderBottomColor: Colors.border,
+                }}
+                editable={!loading}
+              />
+            </View>
+
+            {/* Password Input */}
+            <View style={{ marginBottom: 48 }}>
+              <Text
+                style={{
+                  fontFamily: "Inter_500Medium",
+                  fontSize: 12,
+                  color: Colors.textSecondary,
+                  textTransform: "uppercase",
+                  letterSpacing: 1,
+                  marginBottom: 8,
+                }}
+              >
+                Password
+              </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  borderBottomWidth: 1,
+                  borderBottomColor: Colors.border,
+                }}
+              >
+                <TextInput
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="Enter your password"
+                  placeholderTextColor={Colors.textMuted}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
                   style={{
-                    fontSize: 14,
-                    fontWeight: "600",
-                    color: AC.onBackground,
-                    marginBottom: 6,
-                    marginLeft: 2,
+                    flex: 1,
+                    fontFamily: "Inter_500Medium",
+                    fontSize: 18,
+                    color: Colors.textPrimary,
+                    paddingVertical: 12,
                   }}
-                >
-                  Email Address
-                </Text>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    backgroundColor: AC.surfaceLow,
-                    borderRadius: 12,
-                    height: 56,
-                    paddingHorizontal: 16,
-                  }}
+                  editable={!loading}
+                />
+                <Pressable
+                  onPress={() => setShowPassword((p) => !p)}
+                  style={{ padding: 8, marginRight: -8 }}
                 >
                   <Ionicons
-                    name="mail-outline"
+                    name={showPassword ? "eye-off-outline" : "eye-outline"}
                     size={20}
-                    color={AC.outline}
-                    style={{ marginRight: 12 }}
+                    color={Colors.textSecondary}
                   />
-                  <TextInput
-                    value={email}
-                    onChangeText={setEmail}
-                    placeholder="you@example.com"
-                    placeholderTextColor={AC.outline}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    style={{
-                      flex: 1,
-                      fontSize: 16,
-                      color: AC.onBackground,
-                      padding: 0,
-                    }}
-                    editable={!loading}
-                  />
-                </View>
+                </Pressable>
               </View>
+            </View>
 
-              {/* ── Password Input ───────────────────────────── */}
-              <View style={{ width: "100%", marginBottom: 8 }}>
+            {/* Submit Button */}
+            <Pressable
+              onPress={handleLogin}
+              disabled={loading}
+              style={({ pressed }) => ({
+                width: "100%",
+                height: 56,
+                backgroundColor: loading ? Colors.border : Colors.textPrimary,
+                borderRadius: 4,
+                alignItems: "center",
+                justifyContent: "center",
+                flexDirection: "row" as const,
+                opacity: pressed ? 0.8 : 1,
+                transform: [{ scale: pressed ? 0.98 : 1 }],
+                marginBottom: 32,
+              })}
+            >
+              {loading ? (
+                <ActivityIndicator color={Colors.bg} />
+              ) : (
                 <Text
                   style={{
-                    fontSize: 14,
-                    fontWeight: "600",
-                    color: AC.onBackground,
-                    marginBottom: 6,
-                    marginLeft: 2,
+                    fontFamily: "Inter_600SemiBold",
+                    color: Colors.bg,
+                    fontSize: 16,
+                    letterSpacing: 0.5,
                   }}
                 >
-                  Password
+                  Sign In
                 </Text>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    backgroundColor: AC.surfaceLow,
-                    borderRadius: 12,
-                    height: 56,
-                    paddingHorizontal: 16,
-                  }}
-                >
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={20}
-                    color={AC.outline}
-                    style={{ marginRight: 12 }}
-                  />
-                  <TextInput
-                    value={password}
-                    onChangeText={setPassword}
-                    placeholder="••••••••"
-                    placeholderTextColor={AC.outline}
-                    secureTextEntry={!showPassword}
-                    autoCapitalize="none"
-                    style={{
-                      flex: 1,
-                      fontSize: 16,
-                      color: AC.onBackground,
-                      padding: 0,
-                    }}
-                    editable={!loading}
-                  />
-                  <TouchableOpacity
-                    onPress={() => setShowPassword((p) => !p)}
-                    activeOpacity={0.6}
-                  >
-                    <Ionicons
-                      name={showPassword ? "eye-off-outline" : "eye-outline"}
-                      size={22}
-                      color={AC.outline}
-                    />
-                  </TouchableOpacity>
-                </View>
-              </View>
+              )}
+            </Pressable>
 
-              {/* ── Log In Button ────────────────────────────── */}
-              <TouchableOpacity
-                onPress={handleLogin}
-                disabled={loading}
-                activeOpacity={0.85}
-                style={{
-                  width: "100%",
-                  height: 56,
-                  backgroundColor: loading ? AC.outlineVariant : AC.primary,
-                  borderRadius: 16,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexDirection: "row",
-                  marginTop: 24,
-                  shadowColor: "#4f46e5",
-                  shadowOffset: { width: 0, height: 8 },
-                  shadowOpacity: 0.2,
-                  shadowRadius: 24,
-                  elevation: 6,
-                }}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <>
-                    <Text
-                      style={{
-                        color: AC.onPrimary,
-                        fontSize: 14,
-                        fontWeight: "600",
-                        letterSpacing: 0.1,
-                      }}
-                    >
-                      Log In
-                    </Text>
-                    <Ionicons
-                      name="arrow-forward"
-                      size={20}
-                      color={AC.onPrimary}
-                      style={{ marginLeft: 8 }}
-                    />
-                  </>
-                )}
-              </TouchableOpacity>
-
-              {/* ── OR Divider ───────────────────────────────── */}
-              <View
-                style={{
-                  width: "100%",
-                  flexDirection: "row",
-                  alignItems: "center",
-                  marginVertical: 24,
-                }}
-              >
-                <View
-                  style={{
-                    flex: 1,
-                    height: 1,
-                    backgroundColor: AC.outlineVariant,
-                  }}
-                />
-                <Text
-                  style={{
-                    fontSize: 12,
-                    fontWeight: "500",
-                    color: AC.onSurfaceVariant,
-                    marginHorizontal: 16,
-                  }}
-                >
-                  OR
+            {/* Footer */}
+            <View style={{ flexDirection: "row", justifyContent: "center" }}>
+              <Text style={{ fontFamily: "Inter_400Regular", color: Colors.textSecondary }}>
+                Don't have an account?{" "}
+              </Text>
+              <Pressable onPress={() => router.push("/(auth)/register")}>
+                <Text style={{ fontFamily: "Inter_600SemiBold", color: Colors.textPrimary }}>
+                  Create one
                 </Text>
-                <View
-                  style={{
-                    flex: 1,
-                    height: 1,
-                    backgroundColor: AC.outlineVariant,
-                  }}
-                />
-              </View>
-
-              {/* ── Social Login ─────────────────────────────── */}
-              <View
-                style={{
-                  width: "100%",
-                  flexDirection: "row",
-                  gap: 16,
-                  marginBottom: 32,
-                }}
-              >
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  style={{
-                    flex: 1,
-                    height: 48,
-                    backgroundColor: AC.surfaceLow,
-                    borderRadius: 12,
-                    borderWidth: 1,
-                    borderColor: AC.surfaceVariant,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: "600",
-                      color: AC.onBackground,
-                    }}
-                  >
-                    Google
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  style={{
-                    flex: 1,
-                    height: 48,
-                    backgroundColor: AC.surfaceLow,
-                    borderRadius: 12,
-                    borderWidth: 1,
-                    borderColor: AC.surfaceVariant,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: "600",
-                      color: AC.onBackground,
-                    }}
-                  >
-                    Apple
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* ── Sign Up Link ─────────────────────────────── */}
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <Text style={{ fontSize: 16, color: AC.onSurfaceVariant }}>
-                  Don't have an account?{" "}
-                </Text>
-                <TouchableOpacity
-                  onPress={() => router.push("/(auth)/register")}
-                  activeOpacity={0.7}
-                >
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: "600",
-                      color: AC.primary,
-                    }}
-                  >
-                    Sign up
-                  </Text>
-                </TouchableOpacity>
-              </View>
+              </Pressable>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>

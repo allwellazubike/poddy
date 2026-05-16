@@ -1,26 +1,33 @@
 import React from "react";
-import { View } from "react-native";
+import { View, Text } from "react-native";
 import { router } from "expo-router";
-import { SectionHeader } from "@/components/ui";
-import { DiscoverRow } from "./DiscoverRow";
+import { Colors } from "@/constants";
+import { DiscoverCard } from "./DiscoverCard";
 import { Podcast } from "@/types/podcast";
 
 interface DiscoverSectionProps {
   podcasts: Podcast[];
 }
 
-/**
- * The "Discover" section showing public podcasts from the community feed.
- * Renders a section header + a vertical list of DiscoverRows.
- */
 export function DiscoverSection({ podcasts }: DiscoverSectionProps) {
   if (podcasts.length === 0) return null;
 
   return (
-    <View className="px-5">
-      <SectionHeader title="Discover" />
+    <View style={{ paddingHorizontal: 24, paddingBottom: 48 }}>
+      <Text
+        style={{
+          fontFamily: "Inter_400Regular",
+          fontSize: 16,
+          color: Colors.textSecondary,
+          textTransform: "uppercase",
+          letterSpacing: 2,
+          marginBottom: 16,
+        }}
+      >
+        Community Feed
+      </Text>
       {podcasts.map((item) => (
-        <DiscoverRow
+        <DiscoverCard
           key={item.id}
           item={item}
           onPress={() => {

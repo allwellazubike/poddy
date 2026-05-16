@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants";
 
@@ -8,22 +8,33 @@ interface SearchBarProps {
   onPress?: () => void;
 }
 
-/**
- * A tappable search bar placeholder. Currently non-functional
- * (opens search screen on press in the future).
- */
 export function SearchBar({
   placeholder = "Search podcasts...",
   onPress,
 }: SearchBarProps) {
   return (
-    <TouchableOpacity activeOpacity={0.7} onPress={onPress}>
-      <View className="flex-row items-center bg-poddy-surface border border-poddy-border rounded-xl px-4 py-3">
-        <Ionicons name="search" size={18} color={Colors.textMuted} />
-        <Text className="text-poddy-text-muted text-[14px] ml-3">
-          {placeholder}
-        </Text>
-      </View>
-    </TouchableOpacity>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => ({
+        flexDirection: "row",
+        alignItems: "center",
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: Colors.border,
+        opacity: pressed ? 0.5 : 1,
+      })}
+    >
+      <Ionicons name="search" size={20} color={Colors.textSecondary} />
+      <Text
+        style={{
+          fontFamily: "Inter_400Regular",
+          fontSize: 16,
+          color: Colors.textSecondary,
+          marginLeft: 12,
+        }}
+      >
+        {placeholder}
+      </Text>
+    </Pressable>
   );
 }

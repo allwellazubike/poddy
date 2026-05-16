@@ -1,52 +1,52 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Category } from "@/types/podcast";
+import { Colors } from "@/constants";
 
 interface CategoryCardProps {
   category: Category;
   onPress?: () => void;
 }
 
-/**
- * A category tile used in the Explore grid.
- * Shows an icon with a tinted background and the category name.
- */
 export function CategoryCard({ category, onPress }: CategoryCardProps) {
   return (
-    <TouchableOpacity
-      activeOpacity={0.7}
+    <Pressable
       onPress={onPress}
-      style={{ width: "48%" }}
+      style={({ pressed }) => ({
+        width: "48%",
+        flexDirection: "row",
+        alignItems: "center",
+        padding: 16,
+        borderWidth: 1,
+        borderColor: Colors.border,
+        backgroundColor: pressed ? Colors.surfaceHover : Colors.bg,
+      })}
     >
       <View
-        className="bg-poddy-surface border border-poddy-border rounded-xl p-4"
-        style={{ flexDirection: "row", alignItems: "center" }}
+        style={{
+          width: 32,
+          height: 32,
+          borderRadius: 16,
+          backgroundColor: Colors.surface,
+          alignItems: "center",
+          justifyContent: "center",
+          marginRight: 12,
+        }}
       >
-        <View
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 10,
-            backgroundColor: category.color + "14",
-            alignItems: "center",
-            justifyContent: "center",
-            marginRight: 10,
-          }}
-        >
-          <Ionicons
-            name={category.icon as any}
-            size={18}
-            color={category.color}
-          />
-        </View>
-        <Text
-          className="text-poddy-text-primary text-[13px] font-medium flex-1"
-          numberOfLines={1}
-        >
-          {category.name}
-        </Text>
+        <Ionicons name={category.icon as any} size={16} color={Colors.textPrimary} />
       </View>
-    </TouchableOpacity>
+      <Text
+        style={{
+          fontFamily: "Inter_500Medium",
+          fontSize: 14,
+          color: Colors.textPrimary,
+          flex: 1,
+        }}
+        numberOfLines={1}
+      >
+        {category.name}
+      </Text>
+    </Pressable>
   );
 }

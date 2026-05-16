@@ -9,6 +9,7 @@ export interface Podcast {
   audio_url: string | null;
   created_at: string;
   is_public?: boolean;
+  category?: string;
 }
 
 /** Status polling response from GET /:id/status */

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   ActivityIndicator,
   Alert,
 } from "react-native";
@@ -52,8 +52,6 @@ export default function ProfileScreen() {
         style: "destructive",
         onPress: async () => {
           await logout();
-          // The router should automatically handle the redirect in a root layout effect,
-          // but just in case, we replace to the auth flow
           router.replace("/(auth)/login");
         },
       },
@@ -65,93 +63,89 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-poddy-bg" edges={["top", "bottom"]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={["top", "bottom"]}>
       {/* Header */}
-      <View className="flex-row items-center justify-between px-5 pt-4 pb-5 border-b border-poddy-border bg-poddy-surface">
-        <Text className="text-poddy-text-primary text-[24px] font-bold tracking-tight">
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 24, paddingVertical: 24, borderBottomWidth: 1, borderBottomColor: Colors.border }}>
+        <Text style={{ fontFamily: "Inter_800ExtraBold", fontSize: 24, color: Colors.textPrimary, letterSpacing: -0.5 }}>
           Profile
         </Text>
-        <TouchableOpacity
+        <Pressable
           onPress={() => router.back()}
-          className="w-9 h-9 items-center justify-center rounded-full bg-poddy-bg"
+          style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
         >
-          <Ionicons name="close" size={24} color={Colors.textPrimary} />
-        </TouchableOpacity>
+          <Ionicons name="close" size={28} color={Colors.textPrimary} />
+        </Pressable>
       </View>
 
       {loading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color={Colors.accent} />
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+          <ActivityIndicator size="large" color={Colors.textPrimary} />
         </View>
       ) : profile ? (
-        <View className="flex-1 px-5 pt-8">
+        <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 40 }}>
           {/* Avatar and Email */}
-          <View className="items-center mb-8">
+          <View style={{ alignItems: "center", marginBottom: 48 }}>
             <View
-              className="w-24 h-24 rounded-full items-center justify-center mb-4 shadow-sm"
-              style={{ backgroundColor: Colors.accentSoft }}
+              style={{
+                width: 96,
+                height: 96,
+                borderRadius: 48,
+                backgroundColor: Colors.surface,
+                borderWidth: 1,
+                borderColor: Colors.border,
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 16,
+              }}
             >
-              <Text className="text-poddy-accent text-[40px] font-bold">
+              <Text style={{ fontFamily: "Inter_700Bold", fontSize: 40, color: Colors.textPrimary }}>
                 {getInitial(profile.user.email)}
               </Text>
             </View>
-            <Text className="text-poddy-text-primary text-[20px] font-semibold">
+            <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 20, color: Colors.textPrimary, marginBottom: 4 }}>
               {profile.user.email}
             </Text>
             {profile.user.created_at && (
-              <Text className="text-poddy-text-secondary text-[14px] mt-1">
+              <Text style={{ fontFamily: "Inter_400Regular", fontSize: 14, color: Colors.textSecondary }}>
                 Joined {new Date(profile.user.created_at).toLocaleDateString()}
               </Text>
             )}
           </View>
 
-          {/* Stats Card */}
-          <View className="bg-poddy-surface border border-poddy-border rounded-2xl p-5 mb-8 flex-row items-center justify-between">
-            <View className="flex-row items-center">
-              <View
-                className="w-12 h-12 rounded-full items-center justify-center mr-4"
-                style={{ backgroundColor: Colors.accentSoft }}
-              >
-                <Ionicons name="mic" size={24} color={Colors.accent} />
-              </View>
-              <View>
-                <Text className="text-poddy-text-secondary text-[14px] font-medium">
-                  Podcasts Created
-                </Text>
-                <Text className="text-poddy-text-primary text-[24px] font-bold mt-1">
-                  {profile.stats.totalPodcasts}
-                </Text>
-              </View>
+          {/* Stats */}
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 24, borderTopWidth: 1, borderBottomWidth: 1, borderTopColor: Colors.border, borderBottomColor: Colors.border, marginBottom: 40 }}>
+            <View>
+              <Text style={{ fontFamily: "Inter_500Medium", fontSize: 12, color: Colors.textSecondary, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
+                Podcasts Created
+              </Text>
+              <Text style={{ fontFamily: "Inter_700Bold", fontSize: 32, color: Colors.textPrimary }}>
+                {profile.stats.totalPodcasts}
+              </Text>
             </View>
-          </View>
-
-          {/* Settings / Account Options */}
-          <View className="bg-poddy-surface border border-poddy-border rounded-2xl overflow-hidden mb-8">
-            <TouchableOpacity className="flex-row items-center justify-between px-5 py-4 border-b border-poddy-border">
-              <View className="flex-row items-center">
-                <Ionicons name="settings-outline" size={20} color={Colors.textSecondary} />
-                <Text className="text-poddy-text-primary text-[16px] ml-3">Settings</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
-            </TouchableOpacity>
-            <TouchableOpacity className="flex-row items-center justify-between px-5 py-4">
-              <View className="flex-row items-center">
-                <Ionicons name="help-buoy-outline" size={20} color={Colors.textSecondary} />
-                <Text className="text-poddy-text-primary text-[16px] ml-3">Help & Support</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
-            </TouchableOpacity>
+            <Ionicons name="mic-outline" size={32} color={Colors.textSecondary} />
           </View>
 
           {/* Logout Button */}
-          <TouchableOpacity
+          <Pressable
             onPress={handleLogout}
-            activeOpacity={0.8}
-            className="w-full bg-red-50 py-4 rounded-xl items-center flex-row justify-center border border-red-100"
+            style={({ pressed }) => ({
+              width: "100%",
+              height: 56,
+              backgroundColor: "transparent",
+              borderWidth: 1,
+              borderColor: "#EF4444",
+              borderRadius: 4,
+              alignItems: "center",
+              justifyContent: "center",
+              flexDirection: "row",
+              opacity: pressed ? 0.5 : 1,
+            })}
           >
-            <Ionicons name="log-out-outline" size={20} color="#EF4444" className="mr-2" />
-            <Text className="text-red-500 text-[16px] font-bold ml-2">Log Out</Text>
-          </TouchableOpacity>
+            <Ionicons name="log-out-outline" size={20} color="#EF4444" style={{ marginRight: 8 }} />
+            <Text style={{ fontFamily: "Inter_600SemiBold", color: "#EF4444", fontSize: 16 }}>
+              Log Out
+            </Text>
+          </Pressable>
         </View>
       ) : null}
     </SafeAreaView>
