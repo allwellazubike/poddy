@@ -32,7 +32,7 @@ export default function LibraryScreen() {
 
   const loadLibrary = useCallback(async () => {
     try {
-      const data = await apiFetch<Podcast[]>("/");
+      const data = await apiFetch<Podcast[]>("/podcasts");
       setPodcasts(data);
     } catch (err) {
       console.error("Failed to load library:", err);

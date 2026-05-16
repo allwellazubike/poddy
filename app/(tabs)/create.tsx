@@ -76,7 +76,7 @@ export default function CreateScreen() {
       formData.append("isPublic", isPublic ? "true" : "false");
       formData.append("category", isPublic ? category : "");
 
-      const res = await apiFetch<{ id: string }>("/upload", {
+      const res = await apiFetch<{ id: string }>("/podcasts/upload", {
         method: "POST",
         body: formData,
       });

@@ -1,11 +1,12 @@
 import { API_BASE } from "@/constants";
+import { getToken } from "./token";
 
 /**
  * Fetch wrapper for the Poddy backend.
- * Currently uses mockAuth on the backend, so no token is needed.
- * When JWT auth is implemented, you can add a token parameter back here.
+ * Automatically injects the JWT from secure storage into the
+ * Authorization header for every request.
  *
- * @param path   Route path appended to API_BASE (e.g. "/feed", "/upload")
+ * @param path   Route path appended to API_BASE (e.g. "/podcasts/feed", "/auth/login")
  * @param options Additional fetch options (method, body, headers, etc.)
  */
 export async function apiFetch<T = any>(
@@ -19,6 +20,12 @@ export async function apiFetch<T = any>(
   // Don't set Content-Type for FormData — the browser/RN sets it with the boundary
   if (!(options.body instanceof FormData)) {
     headers["Content-Type"] = headers["Content-Type"] || "application/json";
+  }
+
+  // Inject JWT if available
+  const token = await getToken();
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
   }
 
   const res = await fetch(`${API_BASE}${path}`, {

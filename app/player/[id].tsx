@@ -307,7 +307,7 @@ export default function PlayerScreen() {
   // Polling logic
   const pollStatus = useCallback(async () => {
     try {
-      const data = await apiFetch<PodcastStatus>(`/${id}/status`);
+      const data = await apiFetch<PodcastStatus>(`/podcasts/${id}/status`);
       setStatus(data);
 
       // Stop polling when done or failed

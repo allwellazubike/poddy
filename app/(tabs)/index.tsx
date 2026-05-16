@@ -23,8 +23,8 @@ export default function HomeScreen() {
   const loadData = useCallback(async () => {
     try {
       const [mine, feed] = await Promise.all([
-        apiFetch<Podcast[]>("/"),
-        apiFetch<Podcast[]>("/feed"),
+        apiFetch<Podcast[]>("/podcasts"),
+        apiFetch<Podcast[]>("/podcasts/feed"),
       ]);
 
       setMyPodcasts(mine.filter((p) => p.status === "done"));
