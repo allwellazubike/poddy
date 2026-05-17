@@ -9,52 +9,57 @@ interface DiscoverRowProps {
   onPress: () => void;
 }
 
-/** Used in the Category screen — same list row style as DiscoverCard. */
 export function DiscoverRow({ item, onPress }: DiscoverRowProps) {
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [s.row, pressed && s.pressed]}
+      style={({ pressed }) => [s.card, pressed && s.pressed]}
     >
-      <View style={s.icon}>
-        <Ionicons name="mic-outline" size={20} color="#888888" />
+      <View style={s.iconWrap}>
+        <Ionicons name="mic" size={22} color="#FFFFFF" />
       </View>
 
-      <View style={s.text}>
+      <View style={s.textWrap}>
         <Text style={s.title} numberOfLines={1}>
           {cleanFilename(item.original_filename)}
         </Text>
         <Text style={s.sub}>{timeAgo(item.created_at)}</Text>
       </View>
 
-      <Ionicons name="play-circle-outline" size={24} color="#AAAAAA" />
+      <View style={s.playBtn}>
+        <Ionicons name="play" size={14} color="#111111" style={{ marginLeft: 2 }} />
+      </View>
     </Pressable>
   );
 }
 
 const s = StyleSheet.create({
-  row: {
+  card: {
     flexDirection: "row",
     alignItems: "center",
-    height: 72,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
   },
-  pressed: { opacity: 0.5 },
-  icon: {
-    width: 44,
-    height: 44,
-    borderRadius: 10,
-    backgroundColor: "#F5F5F5",
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
+  pressed: { opacity: 0.65 },
+  iconWrap: {
+    width: 46,
+    height: 46,
+    borderRadius: 12,
+    backgroundColor: "#111111",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 14,
   },
-  text: { flex: 1, marginRight: 12 },
+  textWrap: { flex: 1, marginRight: 10 },
   title: {
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Inter_600SemiBold",
     fontSize: 14,
     color: "#111111",
     marginBottom: 3,
@@ -63,5 +68,13 @@ const s = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     fontSize: 12,
     color: "#888888",
+  },
+  playBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "#F0F0F0",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

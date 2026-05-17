@@ -52,7 +52,7 @@ export default function LibraryScreen() {
       {/* Header */}
       <View style={s.header}>
         <Text style={s.title}>Library</Text>
-        <Text style={s.sub}>Your generated podcasts</Text>
+        <Text style={s.sub}>All your generated podcasts</Text>
       </View>
 
       {/* Filter chips */}
@@ -73,7 +73,7 @@ export default function LibraryScreen() {
 
       {loading ? (
         <View style={s.center}>
-          <ActivityIndicator color="#1A1A1A" />
+          <ActivityIndicator color="#111111" size="large" />
         </View>
       ) : (
         <FlatList
@@ -85,18 +85,28 @@ export default function LibraryScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={["#1A1A1A"]}
-              tintColor="#1A1A1A"
+              colors={["#111111"]}
+              tintColor="#111111"
             />
           }
           ListEmptyComponent={
             <View style={s.empty}>
-              <Text style={s.emptyText}>No podcasts here yet.</Text>
+              <View style={s.emptyIcon}>
+                <Ionicons name="library-outline" size={28} color="#888888" />
+              </View>
+              <Text style={s.emptyTitle}>Nothing here yet</Text>
+              <Text style={s.emptyText}>
+                {activeFilter === "All"
+                  ? "Your podcasts will show up here once created."
+                  : `No ${activeFilter.toLowerCase()} podcasts.`}
+              </Text>
             </View>
           }
           renderItem={({ item }) => {
             const isDone = item.status === "done";
             const isFailed = item.status === "failed";
+            const statusLabel = isDone ? "Ready" : isFailed ? "Failed" : "Processing…";
+            const statusColor = isDone ? "#15803D" : isFailed ? "#DC2626" : "#D97706";
 
             return (
               <Pressable
@@ -107,40 +117,35 @@ export default function LibraryScreen() {
                     params: { id: item.id },
                   })
                 }
-                style={({ pressed }) => [s.row, pressed && s.pressed]}
+                style={({ pressed }) => [s.card, pressed && s.pressed]}
               >
                 {/* Icon */}
-                <View style={s.rowIcon}>
+                <View style={[s.iconWrap, isFailed && s.iconFailed, !isDone && !isFailed && s.iconProcessing]}>
                   <Ionicons
-                    name={
-                      isDone
-                        ? "headset-outline"
-                        : isFailed
-                        ? "alert-circle-outline"
-                        : "hourglass-outline"
-                    }
-                    size={20}
-                    color="#888888"
+                    name={isDone ? "headset" : isFailed ? "alert-circle" : "hourglass"}
+                    size={22}
+                    color={isDone ? "#FFFFFF" : isFailed ? "#DC2626" : "#D97706"}
                   />
                 </View>
 
                 {/* Info */}
-                <View style={s.rowInfo}>
-                  <Text style={s.rowTitle} numberOfLines={1}>
+                <View style={s.info}>
+                  <Text style={s.itemTitle} numberOfLines={1}>
                     {cleanFilename(item.original_filename)}
                   </Text>
-                  <Text style={s.rowSub}>
-                    {isDone
-                      ? `Ready · ${timeAgo(item.created_at)}`
-                      : isFailed
-                      ? "Failed"
-                      : `Processing · ${timeAgo(item.created_at)}`}
-                  </Text>
+                  <View style={s.statusRow}>
+                    <View style={[s.statusDot, { backgroundColor: statusColor }]} />
+                    <Text style={[s.statusText, { color: statusColor }]}>{statusLabel}</Text>
+                    <Text style={s.dot}>·</Text>
+                    <Text style={s.time}>{timeAgo(item.created_at)}</Text>
+                  </View>
                 </View>
 
-                {/* Arrow */}
+                {/* Action */}
                 {isDone && (
-                  <Ionicons name="chevron-forward" size={16} color="#CCCCCC" />
+                  <View style={s.chevron}>
+                    <Ionicons name="chevron-forward" size={18} color="#AAAAAA" />
+                  </View>
                 )}
               </Pressable>
             );
@@ -156,7 +161,7 @@ const s = StyleSheet.create({
   header: { paddingHorizontal: 20, paddingTop: 20, marginBottom: 16 },
   title: {
     fontFamily: "Inter_700Bold",
-    fontSize: 22,
+    fontSize: 26,
     color: "#111111",
     letterSpacing: -0.5,
     marginBottom: 4,
@@ -174,60 +179,113 @@ const s = StyleSheet.create({
     marginBottom: 16,
   },
   chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: 20,
     backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
+    elevation: 1,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
   },
-  chipActive: { backgroundColor: "#1A1A1A", borderColor: "#1A1A1A" },
+  chipActive: { backgroundColor: "#111111", elevation: 0 },
   chipText: {
     fontFamily: "Inter_500Medium",
     fontSize: 13,
-    color: "#888888",
+    color: "#555555",
   },
   chipTextActive: { color: "#FFFFFF" },
 
-  list: { paddingHorizontal: 20, paddingBottom: 80 },
+  list: { paddingHorizontal: 20, paddingBottom: 100, gap: 10 },
 
-  row: {
+  card: {
     flexDirection: "row",
     alignItems: "center",
-    height: 72,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
-  },
-  pressed: { opacity: 0.5 },
-  rowIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 10,
     backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
+    borderRadius: 14,
+    padding: 14,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+  },
+  pressed: { opacity: 0.65 },
+
+  iconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: "#111111",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 14,
   },
-  rowInfo: { flex: 1, marginRight: 8 },
-  rowTitle: {
-    fontFamily: "Inter_500Medium",
+  iconFailed: { backgroundColor: "#FEF2F2" },
+  iconProcessing: { backgroundColor: "#FFFBEB" },
+
+  info: { flex: 1, marginRight: 8 },
+  itemTitle: {
+    fontFamily: "Inter_600SemiBold",
     fontSize: 14,
     color: "#111111",
-    marginBottom: 3,
+    marginBottom: 4,
   },
-  rowSub: {
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  statusText: {
+    fontFamily: "Inter_500Medium",
+    fontSize: 12,
+  },
+  dot: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 12,
+    color: "#CCCCCC",
+  },
+  time: {
     fontFamily: "Inter_400Regular",
     fontSize: 12,
     color: "#888888",
   },
 
+  chevron: {},
+
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  empty: { paddingTop: 48, alignItems: "center" },
+  empty: { paddingTop: 60, alignItems: "center", paddingHorizontal: 40 },
+  emptyIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+  },
+  emptyTitle: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 18,
+    color: "#111111",
+    marginBottom: 8,
+  },
   emptyText: {
     fontFamily: "Inter_400Regular",
     fontSize: 14,
     color: "#888888",
+    textAlign: "center",
+    lineHeight: 20,
   },
 });
