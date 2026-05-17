@@ -1,9 +1,8 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { router } from "expo-router";
-import { Colors } from "@/constants";
-import { DiscoverCard } from "./DiscoverCard";
 import { Podcast } from "@/types/podcast";
+import { DiscoverCard } from "./DiscoverCard";
 
 interface DiscoverSectionProps {
   podcasts: Podcast[];
@@ -13,32 +12,33 @@ export function DiscoverSection({ podcasts }: DiscoverSectionProps) {
   if (podcasts.length === 0) return null;
 
   return (
-    <View style={{ paddingHorizontal: 24, paddingBottom: 48 }}>
-      <Text
-        style={{
-          fontFamily: "Inter_400Regular",
-          fontSize: 16,
-          color: Colors.textSecondary,
-          textTransform: "uppercase",
-          letterSpacing: 2,
-          marginBottom: 16,
-        }}
-      >
-        Community Feed
-      </Text>
+    <View style={s.container}>
+      <Text style={s.title}>From the community</Text>
+
       {podcasts.map((item) => (
         <DiscoverCard
           key={item.id}
           item={item}
-          onPress={() => {
+          onPress={() =>
             router.push({
               // @ts-ignore
               pathname: "/player/[id]",
               params: { id: item.id },
-            });
-          }}
+            })
+          }
         />
       ))}
     </View>
   );
 }
+
+const s = StyleSheet.create({
+  container: { paddingHorizontal: 20 },
+  title: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 17,
+    color: "#111111",
+    letterSpacing: -0.3,
+    marginBottom: 14,
+  },
+});

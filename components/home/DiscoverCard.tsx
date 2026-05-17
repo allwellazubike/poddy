@@ -1,7 +1,6 @@
 import React from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@/constants";
 import { Podcast } from "@/types/podcast";
 import { cleanFilename } from "@/utils";
 
@@ -16,53 +15,73 @@ export function DiscoverCard({ item, onPress }: DiscoverCardProps) {
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => ({
-        flexDirection: "row",
-        alignItems: "center",
-        paddingVertical: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: Colors.border,
-        opacity: pressed ? 0.5 : 1,
-      })}
+      style={({ pressed }) => [s.card, pressed && s.pressed]}
     >
-      <View style={{ flex: 1, paddingRight: 16 }}>
-        <Text
-          style={{
-            fontFamily: "Inter_600SemiBold",
-            fontSize: 16,
-            color: Colors.textPrimary,
-            marginBottom: 4,
-          }}
-          numberOfLines={1}
-        >
+      <View style={s.iconWrap}>
+        <Ionicons name="mic" size={22} color="#FFFFFF" />
+      </View>
+
+      <View style={s.textWrap}>
+        <Text style={s.title} numberOfLines={1}>
           {cleanFilename(item.original_filename)}
         </Text>
-        <Text
-          style={{
-            fontFamily: "Inter_400Regular",
-            fontSize: 12,
-            color: Colors.textSecondary,
-            textTransform: "uppercase",
-            letterSpacing: 1,
-          }}
-          numberOfLines={1}
-        >
+        <Text style={s.category} numberOfLines={1}>
           {category}
         </Text>
       </View>
 
-      <View
-        style={{
-          width: 40,
-          height: 40,
-          borderRadius: 20,
-          backgroundColor: Colors.surfaceHover,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Ionicons name="play" size={16} color={Colors.textPrimary} style={{ marginLeft: 2 }} />
+      <View style={s.playBtn}>
+        <Ionicons name="play" size={14} color="#111111" style={{ marginLeft: 2 }} />
       </View>
     </Pressable>
   );
 }
+
+const s = StyleSheet.create({
+  card: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+  },
+  pressed: { opacity: 0.65 },
+  iconWrap: {
+    width: 46,
+    height: 46,
+    borderRadius: 12,
+    backgroundColor: "#111111",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 14,
+  },
+  textWrap: {
+    flex: 1,
+    marginRight: 10,
+  },
+  title: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 14,
+    color: "#111111",
+    marginBottom: 3,
+  },
+  category: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 12,
+    color: "#888888",
+  },
+  playBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "#F0F0F0",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});

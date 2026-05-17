@@ -1,39 +1,34 @@
 /**
- * Central color tokens for the Poddy app.
- * Design system: Graphite & Ivory (Minimalist Editorial).
- * Strict monochrome, pure contrast.
+ * Poddy — Utility First Design System
+ * Light theme. 6 colors. No exceptions.
  */
 export const Colors = {
-  bg: "#000000",
-  surface: "#121212",
-  surfaceHover: "#18181B",
-  surfaceLow: "#09090B",
-  border: "#27272A",
-  borderLight: "#18181B",
-  
-  // Accents are basically high contrast text or white
-  accent: "#FFFFFF",
-  accentSoft: "#27272A", 
-  
-  textPrimary: "#FFFFFF",
-  textSecondary: "#A1A1AA",
-  textMuted: "#52525B",
+  bg: "#F5F5F5",        // warm off-white — screen backgrounds
+  card: "#FFFFFF",       // all surfaces, inputs, cards
+  border: "#E0E0E0",     // dividers, card outlines
+  text: "#111111",       // primary text
+  muted: "#888888",      // labels, timestamps, placeholders
+  accent: "#1A1A1A",     // buttons, active states, icons
+
+  // aliases for backward compat with components referencing old names
+  textPrimary: "#111111",
+  textSecondary: "#888888",
+  textMuted: "#AAAAAA",
+  surface: "#FFFFFF",
+  surfaceHover: "#F0F0F0",
+  surfaceLow: "#F5F5F5",
+  accentSoft: "#EFEFEF",
 } as const;
 
-/** 
- * Niche colors for Explore/Badges.
- * In a mature minimal app, these should be muted or strictly gray.
- * Let's use subtle, muted tones that look professional against black.
- */
 export const NicheColors: Record<string, string> = {
-  "Computer Science": "#3F3F46",
-  Biology: "#3F3F46",
-  Law: "#3F3F46",
-  Psychology: "#3F3F46",
-  Chemistry: "#3F3F46",
-  Mathematics: "#3F3F46",
-  History: "#3F3F46",
-  Literature: "#3F3F46",
-  Physics: "#3F3F46",
-  General: "#3F3F46",
+  "Computer Science": "#1A1A1A",
+  "Biology": "#1A1A1A",
+  "Law": "#1A1A1A",
+  "Psychology": "#1A1A1A",
+  "Chemistry": "#1A1A1A",
+  "Mathematics": "#1A1A1A",
+  "History": "#1A1A1A",
+  "Literature": "#1A1A1A",
+  "Physics": "#1A1A1A",
+  "General": "#1A1A1A",
 };

@@ -3,7 +3,6 @@ export { LibraryCard } from "./LibraryCard";
 export { DiscoverRow } from "./DiscoverRow";
 export { DiscoverCard } from "./DiscoverCard";
 export { HomeSkeleton } from "./HomeSkeleton";
-export { RecentSection } from "./RecentSection";
 export { LibrarySection } from "./LibrarySection";
 export { DiscoverSection } from "./DiscoverSection";
 export { HomeEmptyState } from "./HomeEmptyState";

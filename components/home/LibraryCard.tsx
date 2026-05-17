@@ -1,11 +1,10 @@
 import React from "react";
-import { View, Text, Pressable, Dimensions } from "react-native";
+import { View, Text, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@/constants";
 import { Podcast } from "@/types/podcast";
 import { cleanFilename } from "@/utils";
 
-const CARD_WIDTH = Dimensions.get("window").width * 0.7;
+export const CARD_WIDTH = 160;
 
 interface LibraryCardProps {
   item: Podcast;
@@ -17,82 +16,103 @@ export function LibraryCard({ item, onPress }: LibraryCardProps) {
   const isFailed = item.status === "failed";
   const isProcessing = !isDone && !isFailed;
 
+  const statusLabel = isDone ? "Ready" : isFailed ? "Failed" : "Processing…";
+  const statusColor = isDone ? "#15803D" : isFailed ? "#DC2626" : "#D97706";
+
   return (
     <Pressable
-      onPress={onPress}
-      style={({ pressed }) => ({
-        width: CARD_WIDTH,
-        marginRight: 16,
-        padding: 20,
-        backgroundColor: Colors.surface,
-        borderWidth: 1,
-        borderColor: Colors.border,
-        opacity: pressed ? 0.8 : 1,
-      })}
+      onPress={isDone ? onPress : undefined}
+      style={({ pressed }) => [s.card, pressed && isDone && s.pressed]}
     >
-      {/* Type / Category Label */}
-      <Text
-        style={{
-          fontFamily: "Inter_500Medium",
-          fontSize: 10,
-          color: Colors.textSecondary,
-          textTransform: "uppercase",
-          letterSpacing: 2,
-          marginBottom: 16,
-        }}
-      >
-        Recent
-      </Text>
-
-      {/* Title */}
-      <Text
-        style={{
-          fontFamily: "Inter_700Bold",
-          fontSize: 20,
-          color: Colors.textPrimary,
-          lineHeight: 28,
-          marginBottom: 32,
-        }}
-        numberOfLines={2}
-      >
-        {cleanFilename(item.original_filename)}
-      </Text>
-
-      {/* Footer / Status */}
-      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", marginTop: "auto" }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          {isDone ? (
-            <Text style={{ fontFamily: "Inter_500Medium", fontSize: 12, color: Colors.textSecondary }}>
-              Ready to play
-            </Text>
-          ) : isProcessing ? (
-            <Text style={{ fontFamily: "Inter_500Medium", fontSize: 12, color: Colors.textPrimary }}>
-              Processing...
-            </Text>
-          ) : (
-            <Text style={{ fontFamily: "Inter_500Medium", fontSize: 12, color: "#EF4444" }}>
-              Failed
-            </Text>
-          )}
-        </View>
-
-        {isDone && (
-          <View
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 16,
-              backgroundColor: Colors.textPrimary,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Ionicons name="play" size={14} color={Colors.bg} style={{ marginLeft: 2 }} />
-          </View>
-        )}
+      {/* Thumbnail */}
+      <View style={[s.thumb, isProcessing && s.thumbProcessing, isFailed && s.thumbFailed]}>
+        <Ionicons
+          name={isDone ? "headset" : isFailed ? "alert-circle" : "hourglass"}
+          size={28}
+          color={isDone ? "#111111" : isFailed ? "#DC2626" : "#D97706"}
+        />
       </View>
+
+      {/* Info */}
+      <View style={s.info}>
+        <Text style={s.title} numberOfLines={2}>
+          {cleanFilename(item.original_filename)}
+        </Text>
+
+        <View style={s.statusRow}>
+          <View style={[s.statusDot, { backgroundColor: statusColor }]} />
+          <Text style={[s.statusText, { color: statusColor }]}>{statusLabel}</Text>
+        </View>
+      </View>
+
+      {/* Play button */}
+      {isDone && (
+        <View style={s.playBtn}>
+          <Ionicons name="play" size={14} color="#FFFFFF" style={{ marginLeft: 2 }} />
+        </View>
+      )}
     </Pressable>
   );
 }
 
-LibraryCard.CARD_WIDTH = CARD_WIDTH;
+const s = StyleSheet.create({
+  card: {
+    width: CARD_WIDTH,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    marginRight: 14,
+    overflow: "hidden",
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+  },
+  pressed: { opacity: 0.75 },
+
+  thumb: {
+    height: 110,
+    backgroundColor: "#F0F0F0",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  thumbProcessing: { backgroundColor: "#FFFBEB" },
+  thumbFailed: { backgroundColor: "#FEF2F2" },
+
+  info: {
+    padding: 12,
+    gap: 6,
+  },
+  title: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 13,
+    color: "#111111",
+    lineHeight: 18,
+  },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  statusText: {
+    fontFamily: "Inter_500Medium",
+    fontSize: 11,
+  },
+
+  playBtn: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: "#111111",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});

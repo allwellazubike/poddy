@@ -1,13 +1,18 @@
-import { DiscoverRow } from "@/components/home";
-import { Colors } from "@/constants";
-import { Podcast } from "@/types/podcast";
-import { apiFetch } from "@/utils";
-
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  Pressable,
+  ActivityIndicator,
+  StyleSheet,
+  ScrollView,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { apiFetch } from "@/utils";
+import { DiscoverRow } from "@/components/home";
+import { Podcast } from "@/types/podcast";
 
 export default function CategoryScreen() {
   const { name } = useLocalSearchParams<{ name: string }>();
@@ -17,41 +22,36 @@ export default function CategoryScreen() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchCategory() {
-      try {
-        setLoading(true);
-        const feed: Podcast[] = await apiFetch(`/podcasts/feed?category=${encodeURIComponent(decodedName)}`);
-        setPodcasts(feed);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchCategory(); 
+    apiFetch<Podcast[]>(`/podcasts/feed?category=${encodeURIComponent(decodedName)}`)
+      .then(setPodcasts)
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, [decodedName]);
 
   return (
-    <SafeAreaView className="flex-1 bg-poddy-bg" edges={["top"]}>
+    <SafeAreaView style={s.screen} edges={["top"]}>
       {/* Header */}
-      <View className="px-5 py-4 flex-row items-center border-b border-poddy-border">
-        <TouchableOpacity onPress={() => router.back()} className="mr-4">
-          <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
-        </TouchableOpacity>
-        <Text className="text-poddy-text-primary text-[20px] font-bold">
-          {decodedName}
-        </Text>
+      <View style={s.header}>
+        <Pressable
+          onPress={() => router.back()}
+          style={({ pressed }) => [s.back, pressed && { opacity: 0.5 }]}
+          hitSlop={8}
+        >
+          <Ionicons name="arrow-back" size={22} color="#111111" />
+        </Pressable>
+        <Text style={s.title}>{decodedName}</Text>
       </View>
 
-      {/* content */}
-      <View className="flex-1 px-5 pt-6">
-        {loading ? (
-          <View className="flex-1 justify-center items-center">
-            <ActivityIndicator color={Colors.accent} />
-          </View>
-        ) : podcasts.length > 0 ? (
-          podcasts.map((podcast) => (
+      {loading ? (
+        <View style={s.center}>
+          <ActivityIndicator color="#1A1A1A" />
+        </View>
+      ) : podcasts.length > 0 ? (
+        <ScrollView
+          contentContainerStyle={s.list}
+          showsVerticalScrollIndicator={false}
+        >
+          {podcasts.map((podcast) => (
             <DiscoverRow
               key={podcast.id}
               item={podcast}
@@ -62,36 +62,100 @@ export default function CategoryScreen() {
                 })
               }
             />
-          ))
-        ) : (
-          <View className="flex-1 justify-center items-center pb-20">
-            <View className="w-20 h-20 bg-poddy-surface rounded-full items-center justify-center mb-6">
-              <Ionicons name="mic-outline" size={40} color={Colors.textMuted} />
-            </View>
-            <Text className="text-poddy-text-primary text-[20px] font-bold mb-2">
-              No podcasts yet
-            </Text>
-            <Text className="text-poddy-text-secondary text-center text-[15px] mb-8 px-4">
-              Be the first to create a podcast for the {decodedName} community!
-            </Text>
-            <TouchableOpacity
-              onPress={() =>
-                router.push({
-                  pathname: "/(tabs)/create",
-                  params: { category: decodedName },
-                })
-              }
-              className="px-8 py-4 rounded-xl flex-row items-center"
-              style={{ backgroundColor: Colors.accent }}
-            >
-              <Ionicons name="add" size={20} color="#fff" className="mr-2" />
-              <Text className="text-white font-bold text-[16px] ml-2">
-                Create {decodedName} Podcast
-              </Text>
-            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      ) : (
+        <View style={s.empty}>
+          <View style={s.emptyIcon}>
+            <Ionicons name="mic-outline" size={28} color="#888888" />
           </View>
-        )}
-      </View>
+          <Text style={s.emptyTitle}>No podcasts yet</Text>
+          <Text style={s.emptySub}>
+            Be the first to create a {decodedName} podcast.
+          </Text>
+          <Pressable
+            onPress={() =>
+              router.push({
+                pathname: "/(tabs)/create",
+                params: { category: decodedName },
+              })
+            }
+            style={({ pressed }) => [s.btn, pressed && { opacity: 0.8 }]}
+          >
+            <Text style={s.btnText}>Create podcast</Text>
+          </Pressable>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
+
+const s = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: "#F5F5F5" },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+    gap: 14,
+  },
+  back: {},
+  title: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 17,
+    color: "#111111",
+    letterSpacing: -0.3,
+  },
+
+  center: { flex: 1, alignItems: "center", justifyContent: "center" },
+
+  list: { paddingHorizontal: 20, paddingBottom: 80 },
+
+  empty: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 48,
+    alignItems: "flex-start",
+  },
+  emptyIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 12,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+  emptyTitle: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 20,
+    color: "#111111",
+    marginBottom: 8,
+    letterSpacing: -0.5,
+  },
+  emptySub: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 14,
+    color: "#888888",
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  btn: {
+    height: 48,
+    backgroundColor: "#1A1A1A",
+    borderRadius: 8,
+    paddingHorizontal: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  btnText: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 14,
+    color: "#FFFFFF",
+  },
+});

@@ -1,86 +1,112 @@
 import React from "react";
-import { View, Text, FlatList, Pressable } from "react-native";
+import { View, Text, FlatList, Pressable, StyleSheet } from "react-native";
 import { router } from "expo-router";
-import { Colors } from "@/constants";
-import { Podcast } from "@/types/podcast";
-import { LibraryCard } from "./LibraryCard";
 import { Ionicons } from "@expo/vector-icons";
+import { Podcast } from "@/types/podcast";
+import { LibraryCard, CARD_WIDTH } from "./LibraryCard";
 
 interface LibrarySectionProps {
   podcasts: Podcast[];
 }
 
 export function LibrarySection({ podcasts }: LibrarySectionProps) {
-  const handlePress = (podcast: Podcast) => {
-    router.push({
-      // @ts-ignore
-      pathname: "/player/[id]",
-      params: { id: podcast.id, filename: podcast.original_filename },
-    });
-  };
-
   return (
-    <View style={{ marginBottom: 48, marginTop: 16 }}>
+    <View style={s.container}>
       {/* Header */}
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "flex-end",
-          paddingHorizontal: 24,
-          marginBottom: 24,
-        }}
-      >
-        <Text
-          style={{
-            fontFamily: "Inter_400Regular",
-            fontSize: 16,
-            color: Colors.textSecondary,
-            textTransform: "uppercase",
-            letterSpacing: 2,
-          }}
+      <View style={s.header}>
+        <Text style={s.title}>Your podcasts</Text>
+        <Pressable
+          onPress={() => router.navigate("/(tabs)/library")}
+          style={({ pressed }) => [s.seeAll, pressed && { opacity: 0.5 }]}
+          hitSlop={8}
         >
-          Your Studio
-        </Text>
+          <Text style={s.seeAllText}>See all</Text>
+        </Pressable>
       </View>
 
+      {/* Horizontal scroll */}
       <FlatList
         data={podcasts}
         keyExtractor={(item) => `lib-${item.id}`}
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 24 }}
+        contentContainerStyle={s.list}
         renderItem={({ item }) => (
-          <LibraryCard item={item} onPress={() => handlePress(item)} />
+          <LibraryCard
+            item={item}
+            onPress={() =>
+              router.push({
+                // @ts-ignore
+                pathname: "/player/[id]",
+                params: { id: item.id },
+              })
+            }
+          />
         )}
         ListFooterComponent={
           <Pressable
             onPress={() => router.navigate("/(tabs)/create")}
-            style={({ pressed }) => ({
-              width: LibraryCard.CARD_WIDTH,
-              padding: 24,
-              borderWidth: 1,
-              borderColor: Colors.border,
-              borderStyle: "dashed",
-              alignItems: "center",
-              justifyContent: "center",
-              opacity: pressed ? 0.5 : 1,
-            })}
+            style={({ pressed }) => [s.addCard, pressed && { opacity: 0.6 }]}
           >
-            <Ionicons name="add" size={32} color={Colors.textSecondary} style={{ marginBottom: 16 }} />
-            <Text
-              style={{
-                fontFamily: "Inter_500Medium",
-                fontSize: 14,
-                color: Colors.textSecondary,
-                letterSpacing: 0.5,
-              }}
-            >
-              New Project
-            </Text>
+            <View style={s.addIcon}>
+              <Ionicons name="add" size={26} color="#888888" />
+            </View>
+            <Text style={s.addText}>New</Text>
           </Pressable>
         }
       />
     </View>
   );
 }
+
+const s = StyleSheet.create({
+  container: { marginBottom: 32 },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  title: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 17,
+    color: "#111111",
+    letterSpacing: -0.3,
+  },
+  seeAll: { paddingVertical: 4 },
+  seeAllText: {
+    fontFamily: "Inter_500Medium",
+    fontSize: 13,
+    color: "#888888",
+  },
+  list: {
+    paddingHorizontal: 20,
+    paddingBottom: 6, // room for shadow
+  },
+  addCard: {
+    width: CARD_WIDTH,
+    height: 178, // matches card (110 thumb + 12 pad + ~56 info)
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: "#D0D0D0",
+    borderStyle: "dashed",
+    backgroundColor: "#FAFAFA",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  addIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#EEEEEE",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  addText: {
+    fontFamily: "Inter_500Medium",
+    fontSize: 13,
+    color: "#888888",
+  },
+});

@@ -1,20 +1,20 @@
-import { Colors } from "@/constants";
-import { Podcast } from "@/types/podcast";
-import { apiFetch, cleanFilename, timeAgo } from "@/utils";
-
-import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  FlatList,
-  RefreshControl,
-  Text,
-  Pressable,
   View,
+  Text,
+  FlatList,
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { apiFetch, cleanFilename, timeAgo } from "@/utils";
+import { Podcast } from "@/types/podcast";
 
-const FILTER_OPTIONS = ["All", "Done", "Processing"] as const;
+const FILTERS = ["All", "Done", "Processing"] as const;
 
 export default function LibraryScreen() {
   const [podcasts, setPodcasts] = useState<Podcast[]>([]);
@@ -34,9 +34,7 @@ export default function LibraryScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    loadLibrary();
-  }, [loadLibrary]);
+  useEffect(() => { loadLibrary(); }, [loadLibrary]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -49,154 +47,187 @@ export default function LibraryScreen() {
     return podcasts.filter((p) => p.status !== "done" && p.status !== "failed");
   }, [podcasts, activeFilter]);
 
-  const handlePress = (podcast: Podcast) => {
-    router.push({
-      // @ts-ignore
-      pathname: "/player/[id]",
-      params: { id: podcast.id },
-    });
-  };
-
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={["top"]}>
-      <View style={{ paddingHorizontal: 24, paddingTop: 32, paddingBottom: 24 }}>
-        <Text
-          style={{
-            fontFamily: "Inter_800ExtraBold",
-            fontSize: 40,
-            color: Colors.textPrimary,
-            letterSpacing: -1,
-            marginBottom: 8,
-          }}
-        >
-          Library
-        </Text>
-        <Text
-          style={{
-            fontFamily: "Inter_400Regular",
-            fontSize: 16,
-            color: Colors.textSecondary,
-          }}
-        >
-          Your generated podcasts.
-        </Text>
+    <SafeAreaView style={s.screen} edges={["top"]}>
+      {/* Header */}
+      <View style={s.header}>
+        <Text style={s.title}>Library</Text>
+        <Text style={s.sub}>Your generated podcasts</Text>
       </View>
 
-      {/* Filter pills */}
-      <View style={{ flexDirection: "row", paddingHorizontal: 24, marginBottom: 24 }}>
-        {FILTER_OPTIONS.map((label) => {
-          const isActive = activeFilter === label;
+      {/* Filter chips */}
+      <View style={s.filters}>
+        {FILTERS.map((f) => {
+          const active = activeFilter === f;
           return (
             <Pressable
-              key={label}
-              onPress={() => setActiveFilter(label)}
-              style={{
-                paddingVertical: 8,
-                paddingHorizontal: 16,
-                borderWidth: 1,
-                borderColor: isActive ? Colors.textPrimary : Colors.border,
-                backgroundColor: isActive ? Colors.textPrimary : "transparent",
-                borderRadius: 20,
-                marginRight: 8,
-              }}
+              key={f}
+              onPress={() => setActiveFilter(f)}
+              style={[s.chip, active && s.chipActive]}
             >
-              <Text
-                style={{
-                  fontFamily: "Inter_500Medium",
-                  fontSize: 13,
-                  color: isActive ? Colors.bg : Colors.textPrimary,
-                }}
-              >
-                {label}
-              </Text>
+              <Text style={[s.chipText, active && s.chipTextActive]}>{f}</Text>
             </Pressable>
           );
         })}
       </View>
 
-      <FlatList
-        data={filtered}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 80 }}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={Colors.textPrimary}
-          />
-        }
-        ListEmptyComponent={
-          !loading ? (
-            <View style={{ marginTop: 48, alignItems: "flex-start" }}>
-              <Text style={{ fontFamily: "Inter_500Medium", fontSize: 16, color: Colors.textSecondary }}>
-                No podcasts found in this category.
-              </Text>
+      {loading ? (
+        <View style={s.center}>
+          <ActivityIndicator color="#1A1A1A" />
+        </View>
+      ) : (
+        <FlatList
+          data={filtered}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={s.list}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#1A1A1A"]}
+              tintColor="#1A1A1A"
+            />
+          }
+          ListEmptyComponent={
+            <View style={s.empty}>
+              <Text style={s.emptyText}>No podcasts here yet.</Text>
             </View>
-          ) : null
-        }
-        renderItem={({ item }) => {
-          const isDone = item.status === "done";
-          
-          return (
-            <Pressable
-              onPress={() => handlePress(item)}
-              style={({ pressed }) => ({
-                flexDirection: "row",
-                alignItems: "center",
-                paddingVertical: 16,
-                borderBottomWidth: 1,
-                borderBottomColor: Colors.border,
-                opacity: pressed ? 0.5 : 1,
-              })}
-            >
-              <View style={{ flex: 1, paddingRight: 16 }}>
-                <Text
-                  style={{
-                    fontFamily: "Inter_600SemiBold",
-                    fontSize: 16,
-                    color: Colors.textPrimary,
-                    marginBottom: 4,
-                  }}
-                  numberOfLines={1}
-                >
-                  {cleanFilename(item.original_filename)}
-                </Text>
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <Text
-                    style={{
-                      fontFamily: "Inter_500Medium",
-                      fontSize: 12,
-                      color: isDone ? Colors.textSecondary : Colors.textPrimary,
-                      textTransform: "uppercase",
-                      letterSpacing: 1,
-                    }}
-                  >
-                    {item.status}
-                  </Text>
-                  <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: Colors.textMuted, marginLeft: 8 }}>
-                    • {timeAgo(item.created_at)}
-                  </Text>
-                </View>
-              </View>
+          }
+          renderItem={({ item }) => {
+            const isDone = item.status === "done";
+            const isFailed = item.status === "failed";
 
-              {isDone && (
-                <View
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 20,
-                    backgroundColor: Colors.surfaceHover,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Ionicons name="play" size={16} color={Colors.textPrimary} style={{ marginLeft: 2 }} />
+            return (
+              <Pressable
+                onPress={() =>
+                  router.push({
+                    // @ts-ignore
+                    pathname: "/player/[id]",
+                    params: { id: item.id },
+                  })
+                }
+                style={({ pressed }) => [s.row, pressed && s.pressed]}
+              >
+                {/* Icon */}
+                <View style={s.rowIcon}>
+                  <Ionicons
+                    name={
+                      isDone
+                        ? "headset-outline"
+                        : isFailed
+                        ? "alert-circle-outline"
+                        : "hourglass-outline"
+                    }
+                    size={20}
+                    color="#888888"
+                  />
                 </View>
-              )}
-            </Pressable>
-          );
-        }}
-      />
+
+                {/* Info */}
+                <View style={s.rowInfo}>
+                  <Text style={s.rowTitle} numberOfLines={1}>
+                    {cleanFilename(item.original_filename)}
+                  </Text>
+                  <Text style={s.rowSub}>
+                    {isDone
+                      ? `Ready · ${timeAgo(item.created_at)}`
+                      : isFailed
+                      ? "Failed"
+                      : `Processing · ${timeAgo(item.created_at)}`}
+                  </Text>
+                </View>
+
+                {/* Arrow */}
+                {isDone && (
+                  <Ionicons name="chevron-forward" size={16} color="#CCCCCC" />
+                )}
+              </Pressable>
+            );
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 }
+
+const s = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: "#F5F5F5" },
+  header: { paddingHorizontal: 20, paddingTop: 20, marginBottom: 16 },
+  title: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 22,
+    color: "#111111",
+    letterSpacing: -0.5,
+    marginBottom: 4,
+  },
+  sub: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 14,
+    color: "#888888",
+  },
+
+  filters: {
+    flexDirection: "row",
+    paddingHorizontal: 20,
+    gap: 8,
+    marginBottom: 16,
+  },
+  chip: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 20,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+  },
+  chipActive: { backgroundColor: "#1A1A1A", borderColor: "#1A1A1A" },
+  chipText: {
+    fontFamily: "Inter_500Medium",
+    fontSize: 13,
+    color: "#888888",
+  },
+  chipTextActive: { color: "#FFFFFF" },
+
+  list: { paddingHorizontal: 20, paddingBottom: 80 },
+
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    height: 72,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
+  },
+  pressed: { opacity: 0.5 },
+  rowIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 14,
+  },
+  rowInfo: { flex: 1, marginRight: 8 },
+  rowTitle: {
+    fontFamily: "Inter_500Medium",
+    fontSize: 14,
+    color: "#111111",
+    marginBottom: 3,
+  },
+  rowSub: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 12,
+    color: "#888888",
+  },
+
+  center: { flex: 1, alignItems: "center", justifyContent: "center" },
+  empty: { paddingTop: 48, alignItems: "center" },
+  emptyText: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 14,
+    color: "#888888",
+  },
+});

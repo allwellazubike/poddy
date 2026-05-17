@@ -1,8 +1,7 @@
 import React from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Category } from "@/types/podcast";
-import { Colors } from "@/constants";
 
 interface CategoryCardProps {
   category: Category;
@@ -13,40 +12,45 @@ export function CategoryCard({ category, onPress }: CategoryCardProps) {
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => ({
-        width: "48%",
-        flexDirection: "row",
-        alignItems: "center",
-        padding: 16,
-        borderWidth: 1,
-        borderColor: Colors.border,
-        backgroundColor: pressed ? Colors.surfaceHover : Colors.bg,
-      })}
+      style={({ pressed }) => [s.card, pressed && s.pressed]}
     >
-      <View
-        style={{
-          width: 32,
-          height: 32,
-          borderRadius: 16,
-          backgroundColor: Colors.surface,
-          alignItems: "center",
-          justifyContent: "center",
-          marginRight: 12,
-        }}
-      >
-        <Ionicons name={category.icon as any} size={16} color={Colors.textPrimary} />
+      <View style={s.iconWrap}>
+        <Ionicons name={category.icon as any} size={22} color="#111111" />
       </View>
-      <Text
-        style={{
-          fontFamily: "Inter_500Medium",
-          fontSize: 14,
-          color: Colors.textPrimary,
-          flex: 1,
-        }}
-        numberOfLines={1}
-      >
+      <Text style={s.label} numberOfLines={2}>
         {category.name}
       </Text>
     </Pressable>
   );
 }
+
+const s = StyleSheet.create({
+  card: {
+    width: "48%",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    padding: 16,
+    alignItems: "flex-start",
+    gap: 12,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+  },
+  pressed: { opacity: 0.65 },
+  iconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: "#F0F0F0",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  label: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 14,
+    color: "#111111",
+    lineHeight: 20,
+  },
+});

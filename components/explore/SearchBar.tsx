@@ -1,40 +1,51 @@
 import React from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, TextInput, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@/constants";
 
 interface SearchBarProps {
+  value?: string;
+  onChangeText?: (v: string) => void;
   placeholder?: string;
-  onPress?: () => void;
 }
 
 export function SearchBar({
-  placeholder = "Search podcasts...",
-  onPress,
+  value,
+  onChangeText,
+  placeholder = "Search podcasts…",
 }: SearchBarProps) {
   return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => ({
-        flexDirection: "row",
-        alignItems: "center",
-        paddingVertical: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: Colors.border,
-        opacity: pressed ? 0.5 : 1,
-      })}
-    >
-      <Ionicons name="search" size={20} color={Colors.textSecondary} />
-      <Text
-        style={{
-          fontFamily: "Inter_400Regular",
-          fontSize: 16,
-          color: Colors.textSecondary,
-          marginLeft: 12,
-        }}
-      >
-        {placeholder}
-      </Text>
-    </Pressable>
+    <View style={s.container}>
+      <Ionicons name="search-outline" size={18} color="#888888" style={s.icon} />
+      <TextInput
+        style={s.input}
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor="#AAAAAA"
+        autoCorrect={false}
+        autoCapitalize="none"
+        returnKeyType="search"
+      />
+    </View>
   );
 }
+
+const s = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    alignItems: "center",
+    height: 48,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    paddingHorizontal: 14,
+  },
+  icon: { marginRight: 10 },
+  input: {
+    flex: 1,
+    fontFamily: "Inter_400Regular",
+    fontSize: 14,
+    color: "#111111",
+  },
+});

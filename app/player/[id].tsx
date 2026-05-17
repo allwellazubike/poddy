@@ -1,89 +1,54 @@
-import { Colors } from "@/constants";
-import { PodcastStatus } from "@/types/podcast";
-import { apiFetch } from "@/utils";
-
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  View,
+  Text,
+  Pressable,
+  ActivityIndicator,
+  StyleSheet,
+  Animated,
+  Easing,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Audio } from "expo-av";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Animated,
-  Easing,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { apiFetch } from "@/utils";
+import { PodcastStatus } from "@/types/podcast";
 
-// step labels
-const STATUS_LABELS: Record<string, { label: string; icon: string }> = {
-  uploaded: { label: "Preparing your file…", icon: "cloud-upload" },
-  extracting: { label: "Extracting text from PDF…", icon: "document-text" },
-  writing: { label: "Poddy is writing your script…", icon: "pencil" },
-  synthesizing: { label: "Generating audio…", icon: "mic" },
-  done: { label: "Your podcast is ready!", icon: "checkmark-circle" },
-  failed: { label: "Something went wrong", icon: "alert-circle" },
+const STEP_ORDER = ["uploaded", "extracting", "writing", "synthesizing", "done"];
+const STEP_LABELS: Record<string, string> = {
+  uploaded: "Preparing file",
+  extracting: "Reading PDF",
+  writing: "Writing script",
+  synthesizing: "Generating audio",
+  done: "Done",
 };
 
-//  step progress 
-
-const STEP_ORDER = [
-  "uploaded",
-  "extracting",
-  "writing",
-  "synthesizing",
-  "done",
-];
-
+// ── Processing Steps ──────────────────────────────────────────────────
 function ProcessingSteps({ currentStatus }: { currentStatus: string }) {
   const currentIdx = STEP_ORDER.indexOf(currentStatus);
 
   return (
-    <View style={{ width: "100%", paddingHorizontal: 32, marginTop: 32 }}>
+    <View style={ps.container}>
       {STEP_ORDER.slice(0, -1).map((step, idx) => {
-        const isComplete = idx < currentIdx;
-        const isCurrent = idx === currentIdx;
-        const info = STATUS_LABELS[step];
-
+        const done = idx < currentIdx;
+        const active = idx === currentIdx;
         return (
-          <View key={step} className="flex-row items-center mb-4">
-            <View
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 14,
-                backgroundColor: isComplete
-                  ? Colors.accent
-                  : isCurrent
-                    ? Colors.accentSoft
-                    : Colors.border,
-                alignItems: "center",
-                justifyContent: "center",
-                marginRight: 12,
-              }}
-            >
-              {isComplete ? (
-                <Ionicons name="checkmark" size={16} color="#fff" />
+          <View key={step} style={ps.row}>
+            <View style={[ps.dot, done && ps.dotDone, active && ps.dotActive]}>
+              {done ? (
+                <Ionicons name="checkmark" size={12} color="#FFFFFF" />
               ) : (
-                <Ionicons
-                  name={info.icon as any}
-                  size={14}
-                  color={isCurrent ? Colors.accent : Colors.textMuted}
+                <View
+                  style={[
+                    ps.inner,
+                    active && ps.innerActive,
+                  ]}
                 />
               )}
             </View>
-            <Text
-              style={{
-                fontSize: 13,
-                fontWeight: isCurrent ? "600" : "400",
-                color:
-                  isComplete || isCurrent
-                    ? Colors.textPrimary
-                    : Colors.textMuted,
-              }}
-            >
-              {info.label}
+            <Text style={[ps.label, (done || active) && ps.labelActive]}>
+              {STEP_LABELS[step]}
             </Text>
           </View>
         );
@@ -92,31 +57,56 @@ function ProcessingSteps({ currentStatus }: { currentStatus: string }) {
   );
 }
 
-// audio player
+const ps = StyleSheet.create({
+  container: { width: "100%", paddingHorizontal: 32, marginTop: 40 },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  dot: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#E0E0E0",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 14,
+  },
+  dotDone: { backgroundColor: "#1A1A1A" },
+  dotActive: { backgroundColor: "#FFFFFF", borderWidth: 2, borderColor: "#1A1A1A" },
+  inner: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#E0E0E0",
+  },
+  innerActive: { backgroundColor: "#1A1A1A" },
+  label: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 14,
+    color: "#AAAAAA",
+  },
+  labelActive: {
+    fontFamily: "Inter_500Medium",
+    color: "#111111",
+  },
+});
+
+// ── Audio Player ──────────────────────────────────────────────────────
 function AudioPlayer({ audioUrl }: { audioUrl: string }) {
   const sound = useRef<Audio.Sound | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [playing, setPlaying] = useState(false);
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
-
-    async function loadSound() {
-      if (!audioUrl || !audioUrl.startsWith("http")) {
-        console.log("Audio URL is not ready yet:", audioUrl);
-        if (mounted) setIsLoading(false);
-        return;
-      }
-
+    (async () => {
+      if (!audioUrl?.startsWith("http")) { setLoading(false); return; }
       try {
-        console.log("Loading valid audio URL:", audioUrl);
-        await Audio.setAudioModeAsync({
-          playsInSilentModeIOS: true,
-          staysActiveInBackground: true,
-        });
-
+        await Audio.setAudioModeAsync({ playsInSilentModeIOS: true, staysActiveInBackground: true });
         const { sound: s } = await Audio.Sound.createAsync(
           { uri: audioUrl },
           { shouldPlay: false },
@@ -124,373 +114,241 @@ function AudioPlayer({ audioUrl }: { audioUrl: string }) {
             if (!mounted || !status.isLoaded) return;
             setPosition(status.positionMillis);
             setDuration(status.durationMillis || 0);
-            setIsPlaying(status.isPlaying);
-          },
+            setPlaying(status.isPlaying);
+          }
         );
         sound.current = s;
-        if (mounted) setIsLoading(false);
-      } catch (err) {
-        console.error("Audio load error:", err);
-        if (mounted) setIsLoading(false);
-      }
-    }
-
-    loadSound();
-
+        if (mounted) setLoading(false);
+      } catch { if (mounted) setLoading(false); }
+    })();
     return () => {
       mounted = false;
-      if (sound.current) {
-        sound.current.unloadAsync();
-      }
+      sound.current?.unloadAsync();
     };
   }, [audioUrl]);
 
-  const togglePlayPause = async () => {
+  const toggle = async () => {
     if (!sound.current) return;
-    if (isPlaying) {
-      await sound.current.pauseAsync();
-    } else {
-      await sound.current.playAsync();
-    }
+    playing ? await sound.current.pauseAsync() : await sound.current.playAsync();
   };
 
   const skip = async (ms: number) => {
     if (!sound.current) return;
-    const newPos = Math.max(0, Math.min(position + ms, duration));
-    await sound.current.setPositionAsync(newPos);
+    await sound.current.setPositionAsync(Math.max(0, Math.min(position + ms, duration)));
   };
 
-  const formatTime = (ms: number) => {
-    const totalSec = Math.floor(ms / 1000);
-    const min = Math.floor(totalSec / 60);
-    const sec = totalSec % 60;
-    return `${min}:${sec.toString().padStart(2, "0")}`;
+  const fmt = (ms: number) => {
+    const s = Math.floor(ms / 1000);
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
   };
 
   const progress = duration > 0 ? position / duration : 0;
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <View className="items-center mt-8">
-        <ActivityIndicator size="large" color={Colors.accent} />
-        <Text className="text-poddy-text-muted text-[13px] mt-3">
-          Loading audio…
-        </Text>
+      <View style={{ marginTop: 32, alignItems: "center" }}>
+        <ActivityIndicator color="#1A1A1A" />
+        <Text style={ap.hint}>Loading audio…</Text>
       </View>
     );
   }
 
   return (
-    <View className="w-full px-8 mt-6">
+    <View style={ap.container}>
       {/* Progress bar */}
-      <View
-        style={{
-          height: 4,
-          backgroundColor: Colors.border,
-          borderRadius: 2,
-          marginBottom: 8,
-          overflow: "hidden",
-        }}
-      >
-        <View
-          style={{
-            height: 4,
-            width: `${progress * 100}%`,
-            backgroundColor: Colors.accent,
-            borderRadius: 2,
-          }}
-        />
+      <View style={ap.track}>
+        <View style={[ap.fill, { width: `${progress * 100}%` }]} />
       </View>
 
-      {/* Time labels */}
-      <View className="flex-row justify-between mb-6">
-        <Text className="text-poddy-text-muted text-[11px]">
-          {formatTime(position)}
-        </Text>
-        <Text className="text-poddy-text-muted text-[11px]">
-          {formatTime(duration)}
-        </Text>
+      {/* Time */}
+      <View style={ap.times}>
+        <Text style={ap.time}>{fmt(position)}</Text>
+        <Text style={ap.time}>{fmt(duration)}</Text>
       </View>
 
       {/* Controls */}
-      <View className="flex-row items-center justify-center">
-        {/* Skip back 15s */}
-        <TouchableOpacity
+      <View style={ap.controls}>
+        <Pressable
           onPress={() => skip(-15000)}
-          activeOpacity={0.6}
-          style={{ marginRight: 28 }}
+          style={({ pressed }) => [{ opacity: pressed ? 0.5 : 1 }]}
+          hitSlop={8}
         >
-          <Ionicons name="play-back" size={28} color={Colors.textSecondary} />
-        </TouchableOpacity>
+          <Ionicons name="play-back" size={26} color="#888888" />
+        </Pressable>
 
-        {/* Play / Pause */}
-        <TouchableOpacity
-          onPress={togglePlayPause}
-          activeOpacity={0.8}
-          style={{
-            width: 64,
-            height: 64,
-            borderRadius: 32,
-            backgroundColor: Colors.accent,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+        <Pressable
+          onPress={toggle}
+          style={({ pressed }) => [ap.playBtn, pressed && { opacity: 0.85 }]}
         >
           <Ionicons
-            name={isPlaying ? "pause" : "play"}
-            size={28}
-            color="#fff"
-            style={isPlaying ? {} : { marginLeft: 3 }}
+            name={playing ? "pause" : "play"}
+            size={26}
+            color="#FFFFFF"
+            style={!playing ? { marginLeft: 3 } : undefined}
           />
-        </TouchableOpacity>
+        </Pressable>
 
-        {/* Skip forward 15s */}
-        <TouchableOpacity
+        <Pressable
           onPress={() => skip(15000)}
-          activeOpacity={0.6}
-          style={{ marginLeft: 28 }}
+          style={({ pressed }) => [{ opacity: pressed ? 0.5 : 1 }]}
+          hitSlop={8}
         >
-          <Ionicons
-            name="play-forward"
-            size={28}
-            color={Colors.textSecondary}
-          />
-        </TouchableOpacity>
+          <Ionicons name="play-forward" size={26} color="#888888" />
+        </Pressable>
       </View>
     </View>
   );
 }
 
-// ─── Main Player Screen ──────────────────────────────────────────────
+const ap = StyleSheet.create({
+  container: { width: "100%", paddingHorizontal: 28, marginTop: 24 },
+  track: {
+    height: 3,
+    backgroundColor: "#E0E0E0",
+    borderRadius: 2,
+    overflow: "hidden",
+    marginBottom: 8,
+  },
+  fill: { height: "100%", backgroundColor: "#1A1A1A", borderRadius: 2 },
+  times: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 28,
+  },
+  time: { fontFamily: "Inter_400Regular", fontSize: 12, color: "#888888" },
+  controls: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 36,
+  },
+  playBtn: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#1A1A1A",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  hint: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 13,
+    color: "#888888",
+    marginTop: 8,
+  },
+});
 
+// ── Main Player Screen ────────────────────────────────────────────────
 export default function PlayerScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-
   const [status, setStatus] = useState<PodcastStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Pulsing animation for the loading icon
-  const animValue = useRef(new Animated.Value(0)).current;
-
+  const anim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    const pulse = Animated.loop(
+    const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(animValue, {
-          toValue: 1,
-          duration: 1000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(animValue, {
-          toValue: 0,
-          duration: 1000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ]),
+        Animated.timing(anim, { toValue: 1, duration: 1200, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(anim, { toValue: 0, duration: 1200, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
     );
-    pulse.start();
-    return () => pulse.stop();
-  }, [animValue]);
+    loop.start();
+    return () => loop.stop();
+  }, []);
 
-  const scaleInterpolation = animValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: [1, 1.15],
-  });
-
-  const opacityInterpolation = animValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.7, 1],
-  });
-
-  // Polling logic
   const pollStatus = useCallback(async () => {
     try {
       const data = await apiFetch<PodcastStatus>(`/podcasts/${id}/status`);
       setStatus(data);
-
-      // Stop polling when done or failed
       if (data.status === "done" || data.status === "failed") {
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-          intervalRef.current = null;
-        }
+        if (intervalRef.current) clearInterval(intervalRef.current);
       }
     } catch (err: any) {
       setError(err.message || "Failed to fetch status");
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
+      if (intervalRef.current) clearInterval(intervalRef.current);
     }
   }, [id]);
 
   useEffect(() => {
-    // Initial fetch
     pollStatus();
-
-    // Start polling every 3 seconds
     intervalRef.current = setInterval(pollStatus, 3000);
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [pollStatus]);
 
   const currentStatus = status?.status || "uploaded";
-  const statusInfo = STATUS_LABELS[currentStatus] || STATUS_LABELS.uploaded;
   const isDone = currentStatus === "done";
   const isFailed = currentStatus === "failed";
 
   return (
-    <SafeAreaView className="flex-1 bg-poddy-bg" edges={["top"]}>
-      {/* Header */}
-      <View className="flex-row items-center px-5 pt-4 pb-2">
-        <TouchableOpacity
-          onPress={() => router.back()}
-          activeOpacity={0.7}
-          className="w-9 h-9 rounded-full bg-poddy-surface border border-poddy-border items-center justify-center mr-3"
-        >
-          <Ionicons name="chevron-back" size={20} color={Colors.textPrimary} />
-        </TouchableOpacity>
-        <Text className="text-poddy-text-primary text-[18px] font-bold flex-1">
-          {isDone ? "Now Playing" : "Generating…"}
-        </Text>
-      </View>
+    <SafeAreaView style={pl.screen} edges={["top"]}>
+      {/* Back button */}
+      <Pressable
+        onPress={() => router.back()}
+        style={({ pressed }) => [pl.back, pressed && { opacity: 0.5 }]}
+        hitSlop={8}
+      >
+        <Ionicons name="arrow-back" size={22} color="#111111" />
+      </Pressable>
 
-      <View className="flex-1 items-center justify-center">
+      <View style={pl.body}>
         {error ? (
-          /* Error state */
-          <View className="items-center px-8">
-            <View
-              style={{
-                width: 80,
-                height: 80,
-                borderRadius: 24,
-                backgroundColor: "#FEE2E2",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 16,
-              }}
-            >
-              <Ionicons name="alert-circle" size={40} color="#DC2626" />
+          // ── Error ──
+          <View style={pl.centered}>
+            <View style={pl.stateIcon}>
+              <Ionicons name="alert-circle-outline" size={32} color="#DC2626" />
             </View>
-            <Text className="text-poddy-text-primary text-[17px] font-semibold mb-2">
-              Something went wrong
-            </Text>
-            <Text className="text-poddy-text-secondary text-[14px] text-center mb-6">
-              {error}
-            </Text>
-            <TouchableOpacity
+            <Text style={pl.stateTitle}>Something went wrong</Text>
+            <Text style={pl.stateSub}>{error}</Text>
+            <Pressable
               onPress={() => router.back()}
-              style={{
-                backgroundColor: Colors.accent,
-                borderRadius: 12,
-                paddingVertical: 12,
-                paddingHorizontal: 32,
-              }}
+              style={({ pressed }) => [pl.btn, pressed && { opacity: 0.8 }]}
             >
-              <Text className="text-white text-[14px] font-semibold">
-                Go Back
-              </Text>
-            </TouchableOpacity>
+              <Text style={pl.btnText}>Go back</Text>
+            </Pressable>
           </View>
         ) : isFailed ? (
-          /* Failed pipeline state */
-          <View className="items-center px-8">
-            <View
-              style={{
-                width: 80,
-                height: 80,
-                borderRadius: 24,
-                backgroundColor: "#FEE2E2",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 16,
-              }}
-            >
-              <Ionicons name="alert-circle" size={40} color="#DC2626" />
+          // ── Failed ──
+          <View style={pl.centered}>
+            <View style={pl.stateIcon}>
+              <Ionicons name="alert-circle-outline" size={32} color="#DC2626" />
             </View>
-            <Text className="text-poddy-text-primary text-[17px] font-semibold mb-2">
-              Generation Failed
+            <Text style={pl.stateTitle}>Generation failed</Text>
+            <Text style={pl.stateSub}>
+              Something went wrong in the pipeline. Please try again.
             </Text>
-            <Text className="text-poddy-text-secondary text-[14px] text-center mb-6">
-              The pipeline encountered an error. Please try uploading again.
-            </Text>
-            <TouchableOpacity
+            <Pressable
               onPress={() => router.replace("/(tabs)/create")}
-              style={{
-                backgroundColor: Colors.accent,
-                borderRadius: 12,
-                paddingVertical: 12,
-                paddingHorizontal: 32,
-              }}
+              style={({ pressed }) => [pl.btn, pressed && { opacity: 0.8 }]}
             >
-              <Text className="text-white text-[14px] font-semibold">
-                Try Again
-              </Text>
-            </TouchableOpacity>
+              <Text style={pl.btnText}>Try again</Text>
+            </Pressable>
           </View>
         ) : isDone && status?.audioUrl ? (
-          /* Success — audio player */
-          <View className="w-full items-center">
-            {/* Album art / icon */}
-            <View
-              style={{
-                width: 160,
-                height: 160,
-                borderRadius: 32,
-                backgroundColor: Colors.accentSoft,
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 24,
-              }}
-            >
-              <Ionicons name="headset" size={64} color={Colors.accent} />
+          // ── Player ──
+          <View style={pl.playerWrap}>
+            <View style={pl.artwork}>
+              <Ionicons name="headset" size={48} color="#888888" />
             </View>
-
-            <Text className="text-poddy-text-primary text-[18px] font-bold mb-1">
-              Podcast Ready
-            </Text>
-            <Text className="text-poddy-text-secondary text-[13px] mb-4">
-              Your podcast has been generated
-            </Text>
-
+            <Text style={pl.playerTitle}>Ready to play</Text>
+            <Text style={pl.playerSub}>Your podcast is ready</Text>
             <AudioPlayer audioUrl={status.audioUrl} />
           </View>
         ) : (
-          /* Processing — loading state with steps */
-          <View className="items-center w-full">
+          // ── Processing ──
+          <View style={pl.centered}>
             <Animated.View
-              style={{
-                width: 80,
-                height: 80,
-                borderRadius: 24,
-                backgroundColor: Colors.accentSoft,
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 20,
-                transform: [{ scale: scaleInterpolation }],
-                opacity: opacityInterpolation,
-              }}
+              style={[
+                pl.processingIcon,
+                {
+                  opacity: anim.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }),
+                },
+              ]}
             >
-              <Ionicons
-                name={statusInfo.icon as any}
-                size={36}
-                color={Colors.accent}
-              />
+              <Ionicons name="mic-outline" size={32} color="#888888" />
             </Animated.View>
-
-            <Text className="text-poddy-text-primary text-[17px] font-semibold mb-1">
-              {statusInfo.label}
-            </Text>
-            <Text className="text-poddy-text-muted text-[13px]">
-              This may take a minute…
-            </Text>
-
+            <Text style={pl.stateTitle}>Generating your podcast</Text>
+            <Text style={pl.stateSub}>This usually takes a minute or two</Text>
             <ProcessingSteps currentStatus={currentStatus} />
           </View>
         )}
@@ -498,3 +356,95 @@ export default function PlayerScreen() {
     </SafeAreaView>
   );
 }
+
+const pl = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: "#F5F5F5" },
+  back: {
+    marginLeft: 20,
+    marginTop: 12,
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  body: { flex: 1, alignItems: "center", justifyContent: "center" },
+
+  centered: { alignItems: "center", paddingHorizontal: 32, width: "100%" },
+
+  stateIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+  processingIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+  stateTitle: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 17,
+    color: "#111111",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  stateSub: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 14,
+    color: "#888888",
+    textAlign: "center",
+    lineHeight: 20,
+    marginBottom: 28,
+  },
+  btn: {
+    height: 48,
+    backgroundColor: "#1A1A1A",
+    borderRadius: 8,
+    paddingHorizontal: 28,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  btnText: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 14,
+    color: "#FFFFFF",
+  },
+
+  playerWrap: { width: "100%", alignItems: "center" },
+  artwork: {
+    width: 140,
+    height: 140,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 24,
+  },
+  playerTitle: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 20,
+    color: "#111111",
+    letterSpacing: -0.5,
+    marginBottom: 6,
+  },
+  playerSub: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 14,
+    color: "#888888",
+    marginBottom: 4,
+  },
+});

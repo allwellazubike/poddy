@@ -1,24 +1,24 @@
-import { CATEGORIES, Colors } from "@/constants";
-import { apiFetch } from "@/utils";
-
-import { Ionicons } from "@expo/vector-icons";
-import * as DocumentPicker from "expo-document-picker";
-import { router, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
+  View,
   Text,
   TextInput,
   Pressable,
-  View,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import * as DocumentPicker from "expo-document-picker";
+import { router, useLocalSearchParams } from "expo-router";
+import { CATEGORIES } from "@/constants";
+import { apiFetch } from "@/utils";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 export default function CreateScreen() {
   const params = useLocalSearchParams<{ category?: string }>();
@@ -38,12 +38,10 @@ export default function CreateScreen() {
         type: "application/pdf",
         copyToCacheDirectory: true,
       });
-
       if (result.canceled || !result.assets?.[0]) return;
       const picked = result.assets[0];
-
       if (picked.size && picked.size > MAX_FILE_SIZE) {
-        Alert.alert("File Too Large", "Please select a PDF under 5MB.");
+        Alert.alert("File too large", "Please choose a PDF under 5 MB.");
         return;
       }
       setFile(picked);
@@ -54,10 +52,9 @@ export default function CreateScreen() {
 
   const handleSubmit = useCallback(async () => {
     if (!file) {
-      Alert.alert("No File", "Please select a PDF first.");
+      Alert.alert("No file selected", "Please choose a PDF first.");
       return;
     }
-
     setSubmitting(true);
     try {
       const formData = new FormData();
@@ -85,240 +82,345 @@ export default function CreateScreen() {
         params: { id: res.id },
       });
     } catch (err: any) {
-      Alert.alert("Upload Failed", err.message || "Something went wrong.");
+      Alert.alert("Upload failed", err.message || "Something went wrong.");
     } finally {
       setSubmitting(false);
     }
   }, [file, customPrompt, isPublic, category]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={["top"]}>
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
+    <SafeAreaView style={s.screen} edges={["top"]}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 32, paddingBottom: 80 }}
+          contentContainerStyle={s.scroll}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          {/* Header */}
-          <View style={{ marginBottom: 40 }}>
-            <Text
-              style={{
-                fontFamily: "Inter_800ExtraBold",
-                fontSize: 40,
-                color: Colors.textPrimary,
-                letterSpacing: -1,
-                marginBottom: 8,
-              }}
-            >
-              New Project
-            </Text>
-            <Text
-              style={{
-                fontFamily: "Inter_400Regular",
-                fontSize: 16,
-                color: Colors.textSecondary,
-              }}
-            >
-              Transform your document into a podcast.
-            </Text>
+          {/* Page header */}
+          <View style={s.pageHeader}>
+            <Text style={s.pageTitle}>New podcast</Text>
+            <Text style={s.pageSub}>Upload a PDF to get started</Text>
           </View>
 
-          {/* File Picker */}
-          <View style={{ marginBottom: 32 }}>
-            <Text
-              style={{
-                fontFamily: "Inter_500Medium",
-                fontSize: 12,
-                color: Colors.textSecondary,
-                textTransform: "uppercase",
-                letterSpacing: 1,
-                marginBottom: 8,
-              }}
-            >
-              Document
-            </Text>
-            <Pressable
-              onPress={handlePickFile}
-              disabled={submitting}
-              style={({ pressed }) => ({
-                width: "100%",
-                padding: 24,
-                borderWidth: 1,
-                borderColor: file ? Colors.textPrimary : Colors.border,
-                borderStyle: file ? "solid" : "dashed",
-                alignItems: "center",
-                justifyContent: "center",
-                opacity: pressed ? 0.6 : 1,
-              })}
-            >
-              <Ionicons
-                name={file ? "document-text" : "document-attach-outline"}
-                size={32}
-                color={file ? Colors.textPrimary : Colors.textSecondary}
-                style={{ marginBottom: 12 }}
-              />
-              {file ? (
-                <>
-                  <Text
-                    style={{
-                      fontFamily: "Inter_600SemiBold",
-                      fontSize: 14,
-                      color: Colors.textPrimary,
-                      textAlign: "center",
-                      marginBottom: 4,
-                    }}
-                    numberOfLines={1}
-                  >
-                    {file.name}
-                  </Text>
-                  <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: Colors.textSecondary }}>
-                    Tap to change
-                  </Text>
-                </>
-              ) : (
-                <>
-                  <Text style={{ fontFamily: "Inter_500Medium", fontSize: 14, color: Colors.textPrimary, marginBottom: 4 }}>
-                    Select a PDF
-                  </Text>
-                  <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: Colors.textSecondary }}>
-                    Max size: 5MB
-                  </Text>
-                </>
-              )}
-            </Pressable>
-          </View>
+          {/* ── 1. Document ── */}
+          <Text style={s.sectionLabel}>1. Document</Text>
+          <Pressable
+            onPress={handlePickFile}
+            disabled={submitting}
+            style={({ pressed }) => [
+              s.uploadZone,
+              file && s.uploadZoneActive,
+              pressed && s.pressed,
+            ]}
+          >
+            <Ionicons
+              name={file ? "document-text" : "document-attach-outline"}
+              size={28}
+              color={file ? "#1A1A1A" : "#AAAAAA"}
+            />
+            {file ? (
+              <View style={{ flex: 1 }}>
+                <Text style={s.fileName} numberOfLines={1}>
+                  {file.name}
+                </Text>
+                <Text style={s.fileSub}>Tap to change</Text>
+              </View>
+            ) : (
+              <View style={{ flex: 1 }}>
+                <Text style={s.uploadLabel}>Choose PDF</Text>
+                <Text style={s.uploadSub}>Max 5 MB</Text>
+              </View>
+            )}
+            {file && (
+              <Pressable
+                onPress={() => setFile(null)}
+                hitSlop={8}
+                style={s.clearBtn}
+              >
+                <Ionicons name="close" size={16} color="#888888" />
+              </Pressable>
+            )}
+          </Pressable>
 
-          {/* Custom Prompt */}
-          <View style={{ marginBottom: 32 }}>
-            <Text
-              style={{
-                fontFamily: "Inter_500Medium",
-                fontSize: 12,
-                color: Colors.textSecondary,
-                textTransform: "uppercase",
-                letterSpacing: 1,
-                marginBottom: 8,
-              }}
-            >
-              Custom Instructions
-            </Text>
+          {/* ── 2. Instructions ── */}
+          <Text style={s.sectionLabel}>2. Instructions (optional)</Text>
+          <View style={s.textareaWrap}>
             <TextInput
+              style={s.textarea}
               value={customPrompt}
               onChangeText={setCustomPrompt}
-              placeholder="e.g. Focus on chapter 3, keep it casual..."
-              placeholderTextColor={Colors.textMuted}
+              placeholder="e.g. Focus on chapter 3, keep it casual, use simple language…"
+              placeholderTextColor="#AAAAAA"
               multiline
-              style={{
-                fontFamily: "Inter_400Regular",
-                fontSize: 16,
-                color: Colors.textPrimary,
-                borderBottomWidth: 1,
-                borderBottomColor: Colors.border,
-                paddingVertical: 12,
-                minHeight: 48,
-              }}
+              textAlignVertical="top"
               editable={!submitting}
             />
           </View>
 
-          {/* Visibility Toggle */}
-          <View style={{ marginBottom: 32 }}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <Text
-                style={{
-                  fontFamily: "Inter_500Medium",
-                  fontSize: 12,
-                  color: Colors.textSecondary,
-                  textTransform: "uppercase",
-                  letterSpacing: 1,
-                }}
-              >
-                Visibility
-              </Text>
-              <Pressable
-                onPress={() => setIsPublic(!isPublic)}
-                disabled={submitting}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 8,
-                }}
-              >
-                <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 14, color: Colors.textPrimary }}>
+          {/* ── 3. Settings ── */}
+          <Text style={s.sectionLabel}>3. Settings</Text>
+
+          {/* Public toggle */}
+          <Pressable
+            onPress={() => setIsPublic((p) => !p)}
+            disabled={submitting}
+            style={({ pressed }) => [s.toggleRow, pressed && s.pressed]}
+          >
+            <View style={s.toggleLeft}>
+              <Ionicons
+                name={isPublic ? "globe-outline" : "lock-closed-outline"}
+                size={18}
+                color="#888888"
+              />
+              <View style={{ marginLeft: 12 }}>
+                <Text style={s.toggleLabel}>
                   {isPublic ? "Public" : "Private"}
                 </Text>
-                <Ionicons name={isPublic ? "globe-outline" : "lock-closed-outline"} size={16} color={Colors.textPrimary} />
-              </Pressable>
+                <Text style={s.toggleSub}>
+                  {isPublic
+                    ? "Anyone can discover this podcast"
+                    : "Only visible to you"}
+                </Text>
+              </View>
             </View>
+            {/* Toggle pill */}
+            <View style={[s.pill, isPublic && s.pillActive]}>
+              <View style={[s.pillThumb, isPublic && s.pillThumbActive]} />
+            </View>
+          </Pressable>
 
-            {/* Category selection if public */}
-            {isPublic && (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+          {/* Category (only when public) */}
+          {isPublic && (
+            <View style={s.categoryWrap}>
+              <Text style={s.categoryLabel}>Category</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={s.categoryRow}
+              >
                 {CATEGORIES.map((cat) => {
-                  const isSelected = category === cat.name;
+                  const active = category === cat.name;
                   return (
                     <Pressable
                       key={cat.name}
                       onPress={() => setCategory(cat.name)}
-                      style={{
-                        paddingVertical: 8,
-                        paddingHorizontal: 16,
-                        borderWidth: 1,
-                        borderColor: isSelected ? Colors.textPrimary : Colors.border,
-                        backgroundColor: isSelected ? Colors.textPrimary : "transparent",
-                        borderRadius: 20,
-                      }}
+                      style={[s.chip, active && s.chipActive]}
                     >
-                      <Text
-                        style={{
-                          fontFamily: "Inter_500Medium",
-                          fontSize: 13,
-                          color: isSelected ? Colors.bg : Colors.textPrimary,
-                        }}
-                      >
+                      <Text style={[s.chipText, active && s.chipTextActive]}>
                         {cat.name}
                       </Text>
                     </Pressable>
                   );
                 })}
               </ScrollView>
-            )}
-          </View>
+            </View>
+          )}
+        </ScrollView>
 
-          {/* Submit Button */}
+        {/* ── Sticky Generate button ── */}
+        <View style={s.footer}>
           <Pressable
             onPress={handleSubmit}
             disabled={!file || submitting}
-            style={({ pressed }) => ({
-              width: "100%",
-              height: 56,
-              backgroundColor: !file || submitting ? Colors.border : Colors.textPrimary,
-              borderRadius: 4,
-              alignItems: "center",
-              justifyContent: "center",
-              flexDirection: "row" as const,
-              opacity: pressed ? 0.8 : 1,
-              transform: [{ scale: pressed ? 0.98 : 1 }],
-              marginTop: 16,
-            })}
+            style={({ pressed }) => [
+              s.generateBtn,
+              (!file || submitting) && s.generateBtnDisabled,
+              pressed && s.pressed,
+            ]}
           >
             {submitting ? (
-              <ActivityIndicator color={Colors.bg} />
+              <ActivityIndicator color="#FFFFFF" size="small" />
             ) : (
-              <Text
-                style={{
-                  fontFamily: "Inter_600SemiBold",
-                  color: Colors.bg,
-                  fontSize: 16,
-                  letterSpacing: 0.5,
-                }}
-              >
-                Generate
-              </Text>
+              <Text style={s.generateBtnText}>Generate podcast</Text>
             )}
           </Pressable>
-        </ScrollView>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
+
+const s = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: "#F5F5F5" },
+  scroll: { paddingHorizontal: 20, paddingBottom: 24 },
+
+  pageHeader: { paddingTop: 20, marginBottom: 28 },
+  pageTitle: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 22,
+    color: "#111111",
+    letterSpacing: -0.5,
+    marginBottom: 4,
+  },
+  pageSub: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 14,
+    color: "#888888",
+  },
+
+  sectionLabel: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 13,
+    color: "#111111",
+    marginBottom: 10,
+    marginTop: 24,
+  },
+
+  // Upload zone
+  uploadZone: {
+    flexDirection: "row",
+    alignItems: "center",
+    height: 72,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: "#E0E0E0",
+    borderStyle: "dashed",
+    paddingHorizontal: 16,
+    gap: 14,
+  },
+  uploadZoneActive: {
+    borderStyle: "solid",
+    borderColor: "#1A1A1A",
+  },
+  uploadLabel: {
+    fontFamily: "Inter_500Medium",
+    fontSize: 14,
+    color: "#111111",
+    marginBottom: 2,
+  },
+  uploadSub: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 12,
+    color: "#888888",
+  },
+  fileName: {
+    fontFamily: "Inter_500Medium",
+    fontSize: 14,
+    color: "#111111",
+    marginBottom: 2,
+  },
+  fileSub: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 12,
+    color: "#888888",
+  },
+  clearBtn: {
+    padding: 4,
+  },
+
+  // Textarea
+  textareaWrap: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    padding: 14,
+    minHeight: 96,
+  },
+  textarea: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 14,
+    color: "#111111",
+    minHeight: 72,
+    lineHeight: 20,
+  },
+
+  // Toggle
+  toggleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  toggleLeft: { flexDirection: "row", alignItems: "center", flex: 1 },
+  toggleLabel: {
+    fontFamily: "Inter_500Medium",
+    fontSize: 14,
+    color: "#111111",
+    marginBottom: 2,
+  },
+  toggleSub: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 12,
+    color: "#888888",
+  },
+  pill: {
+    width: 44,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: "#E0E0E0",
+    padding: 3,
+    justifyContent: "center",
+  },
+  pillActive: { backgroundColor: "#1A1A1A" },
+  pillThumb: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "#FFFFFF",
+    alignSelf: "flex-start",
+  },
+  pillThumbActive: { alignSelf: "flex-end" },
+
+  // Category
+  categoryWrap: { marginTop: 16 },
+  categoryLabel: {
+    fontFamily: "Inter_500Medium",
+    fontSize: 13,
+    color: "#888888",
+    marginBottom: 10,
+  },
+  categoryRow: { gap: 8 },
+  chip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    backgroundColor: "#FFFFFF",
+  },
+  chipActive: {
+    backgroundColor: "#1A1A1A",
+    borderColor: "#1A1A1A",
+  },
+  chipText: {
+    fontFamily: "Inter_500Medium",
+    fontSize: 13,
+    color: "#111111",
+  },
+  chipTextActive: { color: "#FFFFFF" },
+
+  // Footer
+  footer: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#E0E0E0",
+    backgroundColor: "#F5F5F5",
+  },
+  generateBtn: {
+    height: 52,
+    backgroundColor: "#1A1A1A",
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  generateBtnDisabled: { backgroundColor: "#CCCCCC" },
+  generateBtnText: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 15,
+    color: "#FFFFFF",
+  },
+
+  pressed: { opacity: 0.75 },
+});

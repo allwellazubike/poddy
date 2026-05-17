@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { Platform } from "react-native";
+import { Platform, View } from "react-native";
 
 export default function TabsLayout() {
   return (
@@ -8,19 +8,20 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "#000000",
-          borderTopColor: "#27272A",
+          backgroundColor: "#FFFFFF",
+          borderTopColor: "#E0E0E0",
           borderTopWidth: 1,
-          height: Platform.OS === "ios" ? 88 : 65,
-          paddingBottom: Platform.OS === "ios" ? 30 : 10,
+          height: Platform.OS === "ios" ? 84 : 60,
+          paddingBottom: Platform.OS === "ios" ? 28 : 8,
           paddingTop: 8,
           elevation: 0,
+          shadowOpacity: 0,
         },
-        tabBarActiveTintColor: "#FFFFFF",
-        tabBarInactiveTintColor: "#52525B",
+        tabBarActiveTintColor: "#1A1A1A",
+        tabBarInactiveTintColor: "#AAAAAA",
         tabBarLabelStyle: {
-          fontFamily: "Inter_600SemiBold",
-          fontSize: 10,
+          fontFamily: "Inter_500Medium",
+          fontSize: 11,
           marginTop: 2,
         },
       }}
@@ -45,7 +46,7 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "compass" : "compass-outline"}
-              size={24}
+              size={22}
               color={color}
             />
           ),
@@ -56,11 +57,22 @@ export default function TabsLayout() {
         options={{
           title: "Create",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? "add-circle" : "add-circle-outline"}
-              size={26}
-              color={color}
-            />
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                backgroundColor: focused ? "#1A1A1A" : "#EFEFEF",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Ionicons
+                name="add"
+                size={22}
+                color={focused ? "#FFFFFF" : "#888888"}
+              />
+            </View>
           ),
         }}
       />

@@ -46,18 +46,18 @@ export default function HomeScreen() {
   }, [loadData]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={["top"]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#F5F5F5" }} edges={["top"]}>
       <HomeHeader />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40, flexGrow: 1, paddingTop: 24 }}
+        contentContainerStyle={{ paddingBottom: 80, flexGrow: 1, paddingTop: 4 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={Colors.accent}
-            colors={[Colors.accent]}
+            colors={["#1A1A1A"]}
+            tintColor="#1A1A1A"
           />
         }
       >
