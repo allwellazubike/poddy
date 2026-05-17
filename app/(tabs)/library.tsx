@@ -105,8 +105,14 @@ export default function LibraryScreen() {
           renderItem={({ item }) => {
             const isDone = item.status === "done";
             const isFailed = item.status === "failed";
+            const isProcessing = !isDone && !isFailed;
             const statusLabel = isDone ? "Ready" : isFailed ? "Failed" : "Processing…";
             const statusColor = isDone ? "#15803D" : isFailed ? "#DC2626" : "#D97706";
+            
+            const iconBg = isDone ? "bg-gray-900" : isFailed ? "bg-red-50" : "bg-amber-50";
+            const statusColorClass = isDone ? "bg-green-700" : isFailed ? "bg-red-600" : "bg-amber-600";
+            const statusTextColorClass = isDone ? "text-green-700" : isFailed ? "text-red-600" : "text-amber-600";
+            const iconColor = isDone ? "#FFFFFF" : isFailed ? "#DC2626" : "#D97706";
 
             return (
               <Pressable
@@ -117,33 +123,34 @@ export default function LibraryScreen() {
                     params: { id: item.id },
                   })
                 }
-                style={({ pressed }) => [s.card, pressed && s.pressed]}
+                className="flex-row items-center bg-white rounded-[14px] p-3.5 mb-2.5 shadow-sm border border-gray-200 active:opacity-65"
+                style={{ elevation: 2 }}
               >
                 {/* Icon */}
-                <View style={[s.iconWrap, isFailed && s.iconFailed, !isDone && !isFailed && s.iconProcessing]}>
+                <View className={`w-12 h-12 rounded-xl items-center justify-center mr-3.5 ${iconBg}`}>
                   <Ionicons
                     name={isDone ? "headset" : isFailed ? "alert-circle" : "hourglass"}
                     size={22}
-                    color={isDone ? "#FFFFFF" : isFailed ? "#DC2626" : "#D97706"}
+                    color={iconColor}
                   />
                 </View>
 
                 {/* Info */}
-                <View style={s.info}>
-                  <Text style={s.itemTitle} numberOfLines={1}>
+                <View className="flex-1 mr-2">
+                  <Text className="font-semibold text-[14px] text-gray-900 mb-1" numberOfLines={1}>
                     {cleanFilename(item.original_filename)}
                   </Text>
-                  <View style={s.statusRow}>
-                    <View style={[s.statusDot, { backgroundColor: statusColor }]} />
-                    <Text style={[s.statusText, { color: statusColor }]}>{statusLabel}</Text>
-                    <Text style={s.dot}>·</Text>
-                    <Text style={s.time}>{timeAgo(item.created_at)}</Text>
+                  <View className="flex-row items-center space-x-1.5">
+                    <View className={`w-1.5 h-1.5 rounded-full ${statusColorClass}`} />
+                    <Text className={`font-medium text-[12px] ${statusTextColorClass}`}>{statusLabel}</Text>
+                    <Text className="font-normal text-[12px] text-gray-300">·</Text>
+                    <Text className="font-normal text-[12px] text-gray-500">{timeAgo(item.created_at)}</Text>
                   </View>
                 </View>
 
                 {/* Action */}
                 {isDone && (
-                  <View style={s.chevron}>
+                  <View>
                     <Ionicons name="chevron-forward" size={18} color="#AAAAAA" />
                   </View>
                 )}

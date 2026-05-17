@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Podcast } from "@/types/podcast";
 import { cleanFilename } from "@/utils";
@@ -15,73 +15,25 @@ export function DiscoverCard({ item, onPress }: DiscoverCardProps) {
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [s.card, pressed && s.pressed]}
+      className="flex-row items-center bg-white rounded-[14px] p-3.5 mb-2.5 shadow-sm border border-gray-200 active:opacity-65"
+      style={{ elevation: 2 }} // Fallback for Android
     >
-      <View style={s.iconWrap}>
+      <View className="w-[46px] h-[46px] rounded-xl bg-gray-900 items-center justify-center mr-3.5">
         <Ionicons name="mic" size={22} color="#FFFFFF" />
       </View>
 
-      <View style={s.textWrap}>
-        <Text style={s.title} numberOfLines={1}>
+      <View className="flex-1 mr-2.5">
+        <Text className="font-semibold text-[14px] text-gray-900 mb-0.5" numberOfLines={1}>
           {cleanFilename(item.original_filename)}
         </Text>
-        <Text style={s.category} numberOfLines={1}>
+        <Text className="font-normal text-[12px] text-gray-500" numberOfLines={1}>
           {category}
         </Text>
       </View>
 
-      <View style={s.playBtn}>
+      <View className="w-[34px] h-[34px] rounded-full bg-gray-100 items-center justify-center">
         <Ionicons name="play" size={14} color="#111111" style={{ marginLeft: 2 }} />
       </View>
     </Pressable>
   );
 }
-
-const s = StyleSheet.create({
-  card: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 10,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-  },
-  pressed: { opacity: 0.65 },
-  iconWrap: {
-    width: 46,
-    height: 46,
-    borderRadius: 12,
-    backgroundColor: "#111111",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 14,
-  },
-  textWrap: {
-    flex: 1,
-    marginRight: 10,
-  },
-  title: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 14,
-    color: "#111111",
-    marginBottom: 3,
-  },
-  category: {
-    fontFamily: "Inter_400Regular",
-    fontSize: 12,
-    color: "#888888",
-  },
-  playBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: "#F0F0F0",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});

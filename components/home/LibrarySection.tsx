@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, FlatList, Pressable, StyleSheet } from "react-native";
+import { View, Text, FlatList, Pressable } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Podcast } from "@/types/podcast";
@@ -11,16 +11,18 @@ interface LibrarySectionProps {
 
 export function LibrarySection({ podcasts }: LibrarySectionProps) {
   return (
-    <View style={s.container}>
+    <View className="mb-8">
       {/* Header */}
-      <View style={s.header}>
-        <Text style={s.title}>Your podcasts</Text>
+      <View className="flex-row items-center justify-between px-5 mb-4">
+        <Text className="font-semibold text-[17px] text-gray-900 tracking-tight">
+          Your podcasts
+        </Text>
         <Pressable
           onPress={() => router.navigate("/(tabs)/library")}
-          style={({ pressed }) => [s.seeAll, pressed && { opacity: 0.5 }]}
+          className="py-1 active:opacity-50"
           hitSlop={8}
         >
-          <Text style={s.seeAllText}>See all</Text>
+          <Text className="font-medium text-[13px] text-gray-500">See all</Text>
         </Pressable>
       </View>
 
@@ -30,7 +32,7 @@ export function LibrarySection({ podcasts }: LibrarySectionProps) {
         keyExtractor={(item) => `lib-${item.id}`}
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={s.list}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 10 }}
         renderItem={({ item }) => (
           <LibraryCard
             item={item}
@@ -46,67 +48,15 @@ export function LibrarySection({ podcasts }: LibrarySectionProps) {
         ListFooterComponent={
           <Pressable
             onPress={() => router.navigate("/(tabs)/create")}
-            style={({ pressed }) => [s.addCard, pressed && { opacity: 0.6 }]}
+            className="w-[160px] h-[178px] rounded-[14px] border-2 border-dashed border-gray-300 bg-gray-50 items-center justify-center active:opacity-60"
           >
-            <View style={s.addIcon}>
+            <View className="w-12 h-12 rounded-full bg-gray-200 items-center justify-center mb-2">
               <Ionicons name="add" size={26} color="#888888" />
             </View>
-            <Text style={s.addText}>New</Text>
+            <Text className="font-medium text-[13px] text-gray-500">New podcast</Text>
           </Pressable>
         }
       />
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  container: { marginBottom: 32 },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    marginBottom: 16,
-  },
-  title: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 17,
-    color: "#111111",
-    letterSpacing: -0.3,
-  },
-  seeAll: { paddingVertical: 4 },
-  seeAllText: {
-    fontFamily: "Inter_500Medium",
-    fontSize: 13,
-    color: "#888888",
-  },
-  list: {
-    paddingHorizontal: 20,
-    paddingBottom: 6, // room for shadow
-  },
-  addCard: {
-    width: CARD_WIDTH,
-    height: 178, // matches card (110 thumb + 12 pad + ~56 info)
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: "#D0D0D0",
-    borderStyle: "dashed",
-    backgroundColor: "#FAFAFA",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  addIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#EEEEEE",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  addText: {
-    fontFamily: "Inter_500Medium",
-    fontSize: 13,
-    color: "#888888",
-  },
-});
