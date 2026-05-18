@@ -170,10 +170,10 @@ function AudioPlayer({ audioUrl }: { audioUrl: string }) {
       <View style={ap.controls}>
         <Pressable
           onPress={() => skip(-15000)}
-          style={({ pressed }) => [{ opacity: pressed ? 0.5 : 1 }]}
+          style={({ pressed }) => [{ opacity: pressed ? 0.5 : 1 }, ap.skipBtn]}
           hitSlop={8}
         >
-          <Ionicons name="play-back" size={26} color="#888888" />
+          <Text style={ap.skipText}>-15s</Text>
         </Pressable>
 
         <Pressable
@@ -190,10 +190,10 @@ function AudioPlayer({ audioUrl }: { audioUrl: string }) {
 
         <Pressable
           onPress={() => skip(15000)}
-          style={({ pressed }) => [{ opacity: pressed ? 0.5 : 1 }]}
+          style={({ pressed }) => [{ opacity: pressed ? 0.5 : 1 }, ap.skipBtn]}
           hitSlop={8}
         >
-          <Ionicons name="play-forward" size={26} color="#888888" />
+          <Text style={ap.skipText}>+15s</Text>
         </Pressable>
       </View>
     </View>
@@ -229,6 +229,15 @@ const ap = StyleSheet.create({
     backgroundColor: "#1A1A1A",
     alignItems: "center",
     justifyContent: "center",
+  },
+  skipBtn: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  skipText: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 15,
+    color: "#111111",
   },
   hint: {
     fontFamily: "Inter_400Regular",
@@ -360,10 +369,10 @@ export default function PlayerScreen() {
 const pl = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#F5F5F5" },
   back: {
-    marginLeft: 20,
-    marginTop: 12,
-    width: 40,
-    height: 40,
+    marginLeft: 24,
+    marginTop: 24,
+    width: 44,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
   },

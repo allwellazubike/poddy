@@ -29,8 +29,9 @@ export function HomeHeader() {
       <Pressable
         style={({ pressed }) => [s.avatar, pressed && { opacity: 0.6 }]}
         onPress={() => router.push("/profile")}
+        hitSlop={8}
       >
-        <Text style={s.avatarText}>{getInitial()}</Text>
+        <Ionicons name="person-circle" size={38} color="#111111" />
       </Pressable>
     </View>
   );
@@ -59,16 +60,7 @@ const s = StyleSheet.create({
     letterSpacing: -0.5,
   },
   avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#1A1A1A",
     alignItems: "center",
     justifyContent: "center",
-  },
-  avatarText: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 14,
-    color: "#0f0f0f",
   },
 });
