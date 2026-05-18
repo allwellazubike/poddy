@@ -226,7 +226,7 @@ const s = StyleSheet.create({
   btnText: {
     fontFamily: "Inter_600SemiBold",
     fontSize: 16,
-    color: "#FFFFFF",
+    color: "#0f0f0f",
     letterSpacing: 0.2,
   },
   footer: { flexDirection: "row", justifyContent: "center" },
