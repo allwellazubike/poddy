@@ -5,12 +5,14 @@ import { Ionicons } from "@expo/vector-icons";
 interface SearchBarProps {
   value?: string;
   onChangeText?: (v: string) => void;
+  onSubmitEditing?: () => void;
   placeholder?: string;
 }
 
 export function SearchBar({
   value,
   onChangeText,
+  onSubmitEditing,
   placeholder = "Search podcasts…",
 }: SearchBarProps) {
   return (
@@ -20,6 +22,7 @@ export function SearchBar({
         style={s.input}
         value={value}
         onChangeText={onChangeText}
+        onSubmitEditing={onSubmitEditing}
         placeholder={placeholder}
         placeholderTextColor="#AAAAAA"
         autoCorrect={false}

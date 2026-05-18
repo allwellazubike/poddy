@@ -69,6 +69,6 @@ const s = StyleSheet.create({
   avatarText: {
     fontFamily: "Inter_600SemiBold",
     fontSize: 14,
-    color: "#FFFFFF",
+    color: "#0f0f0f",
   },
 });

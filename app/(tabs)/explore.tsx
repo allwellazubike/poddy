@@ -1,11 +1,38 @@
-import React from "react";
-import { View, Text, ScrollView, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CATEGORIES } from "@/constants";
 import { router } from "expo-router";
 import { CategoryCard, SearchBar } from "@/components/explore";
+import { DiscoverCard } from "@/components/home";
+import { apiFetch } from "@/utils";
+import { Podcast } from "@/types/podcast";
 
 export default function ExploreScreen() {
+  const [query, setQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [results, setResults] = useState<Podcast[]>([]);
+  const [hasSearched, setHasSearched] = useState(false);
+
+  const handleSearch = async () => {
+    if (!query.trim()) {
+      setHasSearched(false);
+      setResults([]);
+      return;
+    }
+    
+    setIsSearching(true);
+    setHasSearched(true);
+    try {
+      const data = await apiFetch<Podcast[]>(`/podcasts/feed?q=${encodeURIComponent(query.trim())}`);
+      setResults(data);
+    } catch (err) {
+      console.error("Search error:", err);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   return (
     <SafeAreaView style={s.screen} edges={["top"]}>
       <ScrollView
@@ -20,25 +47,67 @@ export default function ExploreScreen() {
 
         {/* Search */}
         <View style={s.searchWrap}>
-          <SearchBar />
+          <SearchBar
+            value={query}
+            onChangeText={(text) => {
+              setQuery(text);
+              if (text === "") {
+                setHasSearched(false);
+                setResults([]);
+              }
+            }}
+            onSubmitEditing={handleSearch}
+            placeholder="Search podcasts…"
+          />
         </View>
 
-        {/* Category grid */}
-        <Text style={s.gridLabel}>Categories</Text>
-        <View style={s.grid}>
-          {CATEGORIES.map((cat) => (
-            <CategoryCard
-              key={cat.name}
-              category={cat}
-              onPress={() =>
-                router.push({
-                  pathname: "/category/[name]" as any,
-                  params: { name: cat.name },
-                })
-              }
-            />
-          ))}
-        </View>
+        {isSearching ? (
+          <View style={{ marginTop: 40, alignItems: "center" }}>
+            <ActivityIndicator size="large" color="#111111" />
+          </View>
+        ) : hasSearched && query.trim() !== "" ? (
+          <View>
+            <Text style={s.gridLabel}>Search Results</Text>
+            {results.length > 0 ? (
+              results.map((item) => (
+                <DiscoverCard
+                  key={item.id}
+                  item={item}
+                  onPress={() =>
+                    router.push({
+                      // @ts-ignore
+                      pathname: "/player/[id]",
+                      params: { id: item.id },
+                    })
+                  }
+                />
+              ))
+            ) : (
+              <Text style={{ fontFamily: "Inter_400Regular", color: "#888888", textAlign: "center", marginTop: 20 }}>
+                No podcasts found matching "{query}"
+              </Text>
+            )}
+          </View>
+        ) : (
+          <>
+            {/* Category grid */}
+            <Text style={s.gridLabel}>Categories</Text>
+            <View style={s.grid}>
+              {CATEGORIES.map((cat) => (
+                <CategoryCard
+                  key={cat.name}
+                  category={cat}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/category/[name]" as any,
+                      params: { name: cat.name },
+                    })
+                  }
+                />
+              ))}
+            </View>
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
