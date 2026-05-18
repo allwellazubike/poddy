@@ -44,7 +44,8 @@ export default function LoginScreen() {
     <SafeAreaView style={s.screen} edges={["top", "bottom"]}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
         <ScrollView
           contentContainerStyle={s.scroll}
@@ -209,7 +210,7 @@ const s = StyleSheet.create({
   btnText: {
     fontFamily: "Inter_600SemiBold",
     fontSize: 16,
-    color: "#0f0f0f",
+    color: "#FFFFFF",
     letterSpacing: 0.2,
   },
   footer: {

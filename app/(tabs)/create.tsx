@@ -116,9 +116,10 @@ export default function CreateScreen() {
           <Pressable
             onPress={handlePickFile}
             disabled={submitting}
-            className={`flex-row items-center h-[72px] bg-white rounded-[10px] border-[1.5px] px-4 active:opacity-75 ${
+            className={`flex-row items-center h-[72px] bg-white rounded-[10px] border-[1.5px] px-4 active:opacity-75 shadow-sm ${
               file ? "border-solid border-gray-900" : "border-dashed border-gray-300"
             }`}
+            style={{ elevation: 1 }}
           >
             <Ionicons
               name={file ? "document-text" : "document-attach-outline"}
@@ -150,7 +151,7 @@ export default function CreateScreen() {
           <Text className="font-semibold text-[13px] text-gray-900 mb-2.5 mt-6">
             2. Instructions (optional)
           </Text>
-          <View className="bg-white rounded-[10px] border border-gray-200 p-3.5 min-h-[96px]">
+          <View className="bg-white rounded-[10px] border border-gray-200 p-3.5 min-h-[96px] shadow-sm" style={{ elevation: 1 }}>
             <TextInput
               className="font-normal text-[14px] text-gray-900 min-h-[72px] leading-5"
               value={customPrompt}
@@ -172,7 +173,8 @@ export default function CreateScreen() {
           <Pressable
             onPress={() => setIsPublic((p) => !p)}
             disabled={submitting}
-            className="flex-row items-center justify-between bg-white rounded-[10px] border border-gray-200 px-4 py-3.5 active:opacity-75"
+            className="flex-row items-center justify-between bg-white rounded-[10px] border border-gray-200 px-4 py-3.5 active:opacity-75 shadow-sm"
+            style={{ elevation: 1 }}
           >
             <View className="flex-row items-center flex-1">
               <Ionicons
