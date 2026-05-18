@@ -123,36 +123,37 @@ export default function LibraryScreen() {
                     params: { id: item.id },
                   })
                 }
-                className="flex-row items-center bg-white rounded-[14px] p-3.5 mb-2.5 shadow-sm border border-gray-200 active:opacity-65"
+                className="flex-row items-center bg-white border border-gray-200 rounded-xl px-4 py-3.5 mb-2.5 shadow-sm active:opacity-65"
                 style={{ elevation: 2 }}
               >
                 {/* Icon */}
-                <View className={`w-12 h-12 rounded-xl items-center justify-center mr-3.5 ${iconBg}`}>
+                <View className={`w-11 h-11 rounded-xl items-center justify-center mr-3 ${iconBg}`}>
                   <Ionicons
-                    name={isDone ? "headset" : isFailed ? "alert-circle" : "hourglass"}
-                    size={22}
+                    name={isDone ? "headset" : isFailed ? "alert-circle" : "hourglass-outline"}
+                    size={20}
                     color={iconColor}
                   />
                 </View>
 
                 {/* Info */}
-                <View className="flex-1 mr-2">
-                  <Text className="font-semibold text-[14px] text-gray-900 mb-1" numberOfLines={1}>
+                <View className="flex-1 mr-3">
+                  <Text className="text-gray-900 text-[14px] font-semibold leading-5 mb-1" numberOfLines={1}>
                     {cleanFilename(item.original_filename)}
                   </Text>
-                  <View className="flex-row items-center space-x-1.5">
-                    <View className={`w-1.5 h-1.5 rounded-full ${statusColorClass}`} />
-                    <Text className={`font-medium text-[12px] ${statusTextColorClass}`}>{statusLabel}</Text>
-                    <Text className="font-normal text-[12px] text-gray-300">·</Text>
-                    <Text className="font-normal text-[12px] text-gray-500">{timeAgo(item.created_at)}</Text>
+                  <View className="flex-row items-center">
+                    <View className={`rounded-[4px] px-1.5 py-0.5 ${isDone ? "bg-green-100" : isFailed ? "bg-red-100" : "bg-amber-100"}`}>
+                      <Text className={`font-semibold text-[10px] capitalize ${statusTextColorClass}`}>
+                        {item.status}
+                      </Text>
+                    </View>
+                    <View className="w-1 h-1 rounded-full bg-gray-300 mx-1.5" />
+                    <Text className="text-gray-500 text-[11px] font-normal">{timeAgo(item.created_at)}</Text>
                   </View>
                 </View>
 
                 {/* Action */}
                 {isDone && (
-                  <View>
-                    <Ionicons name="chevron-forward" size={18} color="#AAAAAA" />
-                  </View>
+                  <Ionicons name="play-circle" size={28} color="#111111" />
                 )}
               </Pressable>
             );

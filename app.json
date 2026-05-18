@@ -4,7 +4,7 @@
     "slug": "poddy",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/poddy_brand_logo.png",
     "scheme": "poddy",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,

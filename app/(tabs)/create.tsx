@@ -9,7 +9,6 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
-  StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -89,68 +88,71 @@ export default function CreateScreen() {
   }, [file, customPrompt, isPublic, category]);
 
   return (
-    <SafeAreaView style={s.screen} edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-[#F5F5F5]" edges={["top"]}>
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={s.scroll}
+          className="flex-1"
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24 }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
           {/* Page header */}
-          <View style={s.pageHeader}>
-            <Text style={s.pageTitle}>New podcast</Text>
-            <Text style={s.pageSub}>Upload a PDF to get started</Text>
+          <View className="pt-5 mb-7">
+            <Text className="font-bold text-[22px] text-gray-900 tracking-tight mb-1">
+              New podcast
+            </Text>
+            <Text className="font-normal text-[14px] text-gray-500">
+              Upload a PDF to get started
+            </Text>
           </View>
 
           {/* ── 1. Document ── */}
-          <Text style={s.sectionLabel}>1. Document</Text>
+          <Text className="font-semibold text-[13px] text-gray-900 mb-2.5 mt-6">
+            1. Document
+          </Text>
           <Pressable
             onPress={handlePickFile}
             disabled={submitting}
-            style={({ pressed }) => [
-              s.uploadZone,
-              file && s.uploadZoneActive,
-              pressed && s.pressed,
-            ]}
+            className={`flex-row items-center h-[72px] bg-white rounded-[10px] border-[1.5px] px-4 active:opacity-75 ${
+              file ? "border-solid border-gray-900" : "border-dashed border-gray-300"
+            }`}
           >
             <Ionicons
               name={file ? "document-text" : "document-attach-outline"}
               size={28}
-              color={file ? "#1A1A1A" : "#AAAAAA"}
+              color={file ? "#111111" : "#AAAAAA"}
+              style={{ marginRight: 14 }}
             />
             {file ? (
-              <View style={{ flex: 1 }}>
-                <Text style={s.fileName} numberOfLines={1}>
+              <View className="flex-1">
+                <Text className="font-medium text-[14px] text-gray-900 mb-0.5" numberOfLines={1}>
                   {file.name}
                 </Text>
-                <Text style={s.fileSub}>Tap to change</Text>
+                <Text className="font-normal text-[12px] text-gray-500">Tap to change</Text>
               </View>
             ) : (
-              <View style={{ flex: 1 }}>
-                <Text style={s.uploadLabel}>Choose PDF</Text>
-                <Text style={s.uploadSub}>Max 5 MB</Text>
+              <View className="flex-1">
+                <Text className="font-medium text-[14px] text-gray-900 mb-0.5">Choose PDF</Text>
+                <Text className="font-normal text-[12px] text-gray-500">Max 5 MB</Text>
               </View>
             )}
             {file && (
-              <Pressable
-                onPress={() => setFile(null)}
-                hitSlop={8}
-                style={s.clearBtn}
-              >
+              <Pressable onPress={() => setFile(null)} hitSlop={8} className="p-1">
                 <Ionicons name="close" size={16} color="#888888" />
               </Pressable>
             )}
           </Pressable>
 
           {/* ── 2. Instructions ── */}
-          <Text style={s.sectionLabel}>2. Instructions (optional)</Text>
-          <View style={s.textareaWrap}>
+          <Text className="font-semibold text-[13px] text-gray-900 mb-2.5 mt-6">
+            2. Instructions (optional)
+          </Text>
+          <View className="bg-white rounded-[10px] border border-gray-200 p-3.5 min-h-[96px]">
             <TextInput
-              style={s.textarea}
+              className="font-normal text-[14px] text-gray-900 min-h-[72px] leading-5"
               value={customPrompt}
               onChangeText={setCustomPrompt}
               placeholder="e.g. Focus on chapter 3, keep it casual, use simple language…"
@@ -162,45 +164,47 @@ export default function CreateScreen() {
           </View>
 
           {/* ── 3. Settings ── */}
-          <Text style={s.sectionLabel}>3. Settings</Text>
+          <Text className="font-semibold text-[13px] text-gray-900 mb-2.5 mt-6">
+            3. Settings
+          </Text>
 
           {/* Public toggle */}
           <Pressable
             onPress={() => setIsPublic((p) => !p)}
             disabled={submitting}
-            style={({ pressed }) => [s.toggleRow, pressed && s.pressed]}
+            className="flex-row items-center justify-between bg-white rounded-[10px] border border-gray-200 px-4 py-3.5 active:opacity-75"
           >
-            <View style={s.toggleLeft}>
+            <View className="flex-row items-center flex-1">
               <Ionicons
                 name={isPublic ? "globe-outline" : "lock-closed-outline"}
                 size={18}
                 color="#888888"
               />
-              <View style={{ marginLeft: 12 }}>
-                <Text style={s.toggleLabel}>
+              <View className="ml-3">
+                <Text className="font-medium text-[14px] text-gray-900 mb-0.5">
                   {isPublic ? "Public" : "Private"}
                 </Text>
-                <Text style={s.toggleSub}>
-                  {isPublic
-                    ? "Anyone can discover this podcast"
-                    : "Only visible to you"}
+                <Text className="font-normal text-[12px] text-gray-500">
+                  {isPublic ? "Anyone can discover this podcast" : "Only visible to you"}
                 </Text>
               </View>
             </View>
             {/* Toggle pill */}
-            <View style={[s.pill, isPublic && s.pillActive]}>
-              <View style={[s.pillThumb, isPublic && s.pillThumbActive]} />
+            <View className={`w-11 h-6 rounded-full p-0.5 justify-center ${isPublic ? "bg-gray-900" : "bg-gray-300"}`}>
+              <View className={`w-5 h-5 rounded-full bg-white ${isPublic ? "self-end" : "self-start"}`} />
             </View>
           </Pressable>
 
           {/* Category (only when public) */}
           {isPublic && (
-            <View style={s.categoryWrap}>
-              <Text style={s.categoryLabel}>Category</Text>
+            <View className="mt-4">
+              <Text className="font-medium text-[13px] text-gray-500 mb-2.5">
+                Select a category for your public podcast:
+              </Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={s.categoryRow}
+                contentContainerStyle={{ gap: 8 }}
               >
                 {CATEGORIES.map((cat) => {
                   const active = category === cat.name;
@@ -208,9 +212,17 @@ export default function CreateScreen() {
                     <Pressable
                       key={cat.name}
                       onPress={() => setCategory(cat.name)}
-                      style={[s.chip, active && s.chipActive]}
+                      className={`flex-row items-center px-3.5 py-2 rounded-full border ${
+                        active ? "bg-gray-900 border-gray-900" : "bg-white border-gray-200"
+                      }`}
                     >
-                      <Text style={[s.chipText, active && s.chipTextActive]}>
+                      <Ionicons
+                        name={cat.icon as any}
+                        size={14}
+                        color={active ? "#FFFFFF" : "#888888"}
+                        style={{ marginRight: 6 }}
+                      />
+                      <Text className={`font-medium text-[13px] ${active ? "text-white" : "text-gray-900"}`}>
                         {cat.name}
                       </Text>
                     </Pressable>
@@ -222,20 +234,18 @@ export default function CreateScreen() {
         </ScrollView>
 
         {/* ── Sticky Generate button ── */}
-        <View style={s.footer}>
+        <View className="px-5 py-3 border-t border-gray-200 bg-[#F5F5F5]">
           <Pressable
             onPress={handleSubmit}
             disabled={!file || submitting}
-            style={({ pressed }) => [
-              s.generateBtn,
-              (!file || submitting) && s.generateBtnDisabled,
-              pressed && s.pressed,
-            ]}
+            className={`h-[52px] rounded-lg items-center justify-center active:opacity-75 ${
+              !file || submitting ? "bg-gray-300" : "bg-gray-900"
+            }`}
           >
             {submitting ? (
               <ActivityIndicator color="#FFFFFF" size="small" />
             ) : (
-              <Text style={s.generateBtnText}>Generate podcast</Text>
+              <Text className="font-semibold text-[15px] text-white">Generate podcast</Text>
             )}
           </Pressable>
         </View>
@@ -243,184 +253,3 @@ export default function CreateScreen() {
     </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#F5F5F5" },
-  scroll: { paddingHorizontal: 20, paddingBottom: 24 },
-
-  pageHeader: { paddingTop: 20, marginBottom: 28 },
-  pageTitle: {
-    fontFamily: "Inter_700Bold",
-    fontSize: 22,
-    color: "#111111",
-    letterSpacing: -0.5,
-    marginBottom: 4,
-  },
-  pageSub: {
-    fontFamily: "Inter_400Regular",
-    fontSize: 14,
-    color: "#888888",
-  },
-
-  sectionLabel: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 13,
-    color: "#111111",
-    marginBottom: 10,
-    marginTop: 24,
-  },
-
-  // Upload zone
-  uploadZone: {
-    flexDirection: "row",
-    alignItems: "center",
-    height: 72,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: "#E0E0E0",
-    borderStyle: "dashed",
-    paddingHorizontal: 16,
-    gap: 14,
-  },
-  uploadZoneActive: {
-    borderStyle: "solid",
-    borderColor: "#1A1A1A",
-  },
-  uploadLabel: {
-    fontFamily: "Inter_500Medium",
-    fontSize: 14,
-    color: "#111111",
-    marginBottom: 2,
-  },
-  uploadSub: {
-    fontFamily: "Inter_400Regular",
-    fontSize: 12,
-    color: "#888888",
-  },
-  fileName: {
-    fontFamily: "Inter_500Medium",
-    fontSize: 14,
-    color: "#111111",
-    marginBottom: 2,
-  },
-  fileSub: {
-    fontFamily: "Inter_400Regular",
-    fontSize: 12,
-    color: "#888888",
-  },
-  clearBtn: {
-    padding: 4,
-  },
-
-  // Textarea
-  textareaWrap: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    padding: 14,
-    minHeight: 96,
-  },
-  textarea: {
-    fontFamily: "Inter_400Regular",
-    fontSize: 14,
-    color: "#111111",
-    minHeight: 72,
-    lineHeight: 20,
-  },
-
-  // Toggle
-  toggleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-  },
-  toggleLeft: { flexDirection: "row", alignItems: "center", flex: 1 },
-  toggleLabel: {
-    fontFamily: "Inter_500Medium",
-    fontSize: 14,
-    color: "#111111",
-    marginBottom: 2,
-  },
-  toggleSub: {
-    fontFamily: "Inter_400Regular",
-    fontSize: 12,
-    color: "#888888",
-  },
-  pill: {
-    width: 44,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: "#E0E0E0",
-    padding: 3,
-    justifyContent: "center",
-  },
-  pillActive: { backgroundColor: "#1A1A1A" },
-  pillThumb: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: "#FFFFFF",
-    alignSelf: "flex-start",
-  },
-  pillThumbActive: { alignSelf: "flex-end" },
-
-  // Category
-  categoryWrap: { marginTop: 16 },
-  categoryLabel: {
-    fontFamily: "Inter_500Medium",
-    fontSize: 13,
-    color: "#888888",
-    marginBottom: 10,
-  },
-  categoryRow: { gap: 8 },
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    backgroundColor: "#FFFFFF",
-  },
-  chipActive: {
-    backgroundColor: "#1A1A1A",
-    borderColor: "#1A1A1A",
-  },
-  chipText: {
-    fontFamily: "Inter_500Medium",
-    fontSize: 13,
-    color: "#111111",
-  },
-  chipTextActive: { color: "#FFFFFF" },
-
-  // Footer
-  footer: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#E0E0E0",
-    backgroundColor: "#F5F5F5",
-  },
-  generateBtn: {
-    height: 52,
-    backgroundColor: "#1A1A1A",
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  generateBtnDisabled: { backgroundColor: "#CCCCCC" },
-  generateBtnText: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 15,
-    color: "#FFFFFF",
-  },
-
-  pressed: { opacity: 0.75 },
-});

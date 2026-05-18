@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -61,10 +62,11 @@ export default function RegisterScreen() {
         >
           {/* Logo */}
           <View style={s.logoArea}>
-            <View style={s.logoIcon}>
-              <Ionicons name="mic" size={32} color="#FFFFFF" />
-            </View>
-            <Text style={s.logo}>Poddy</Text>
+            <Image
+              source={require("@/assets/images/poddy_brand_logo.png")}
+              style={s.logoImage}
+              resizeMode="contain"
+            />
             <Text style={s.tagline}>Create your account</Text>
           </View>
 
@@ -162,21 +164,10 @@ const s = StyleSheet.create({
     paddingVertical: 40,
   },
   logoArea: { alignItems: "center", marginBottom: 32 },
-  logoIcon: {
-    width: 72,
-    height: 72,
-    borderRadius: 20,
-    backgroundColor: "#111111",
-    alignItems: "center",
-    justifyContent: "center",
+  logoImage: {
+    width: 200,
+    height: 60,
     marginBottom: 16,
-  },
-  logo: {
-    fontFamily: "Inter_700Bold",
-    fontSize: 28,
-    color: "#111111",
-    letterSpacing: -0.5,
-    marginBottom: 6,
   },
   tagline: {
     fontFamily: "Inter_400Regular",

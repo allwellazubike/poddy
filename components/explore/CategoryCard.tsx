@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Category } from "@/types/podcast";
 
@@ -12,45 +12,20 @@ export function CategoryCard({ category, onPress }: CategoryCardProps) {
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [s.card, pressed && s.pressed]}
+      style={{ width: "48%" }}
+      className="active:opacity-65"
     >
-      <View style={s.iconWrap}>
-        <Ionicons name={category.icon as any} size={22} color="#111111" />
+      <View
+        className="bg-white border border-gray-200 rounded-xl p-3 flex-row items-center shadow-sm"
+        style={{ elevation: 2 }}
+      >
+        <View className="w-9 h-9 rounded-[10px] bg-gray-100 items-center justify-center mr-2.5">
+          <Ionicons name={category.icon as any} size={18} color="#111111" />
+        </View>
+        <Text className="text-gray-900 text-[13px] font-semibold flex-1" numberOfLines={1}>
+          {category.name}
+        </Text>
       </View>
-      <Text style={s.label} numberOfLines={2}>
-        {category.name}
-      </Text>
     </Pressable>
   );
 }
-
-const s = StyleSheet.create({
-  card: {
-    width: "48%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 14,
-    padding: 16,
-    alignItems: "flex-start",
-    gap: 12,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-  },
-  pressed: { opacity: 0.65 },
-  iconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: "#F0F0F0",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  label: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 14,
-    color: "#111111",
-    lineHeight: 20,
-  },
-});
